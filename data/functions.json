@@ -1,0 +1,4435 @@
+[
+  {
+    "id": "torch.tensor",
+    "name": "tensor",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.tensor",
+    "signature": "torch.tensor(data, *, dtype=None, device=None, requires_grad=False)",
+    "description": "从已有数据构造张量。",
+    "params": [
+      {
+        "name": "data",
+        "type": "array",
+        "desc": "初始数据，可传列表、NumPy数组等"
+      },
+      {
+        "name": "dtype",
+        "type": "torch.dtype",
+        "desc": "数据类型"
+      },
+      {
+        "name": "device",
+        "type": "torch.device",
+        "desc": "设备: cpu/cuda:0"
+      },
+      {
+        "name": "requires_grad",
+        "type": "bool",
+        "desc": "是否自动求导"
+      }
+    ],
+    "returns": {
+      "type": "Tensor",
+      "desc": "构造好的张量"
+    },
+    "usage": "x = torch.tensor([[1, 2], [3, 4]], dtype=torch.float32)",
+    "example": "import torch\nx = torch.tensor([[1.0, 2.0], [3.0, 4.0]])\nprint(x.shape)  # torch.Size([2, 2])",
+    "related": [
+      "torch.as_tensor",
+      "torch.from_numpy",
+      "torch.zeros",
+      "torch.ones"
+    ],
+    "categories": [
+      "张量创建"
+    ],
+    "tips": "torch.tensor 总是拷贝数据；若仅引用原始数据请用 torch.as_tensor。"
+  },
+  {
+    "id": "torch.zeros",
+    "name": "zeros",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.zeros",
+    "signature": "torch.zeros(*size, *, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "返回全零张量，形状由 size 定义。",
+    "usage": "z = torch.zeros(3, 64, 64)",
+    "example": "import torch\nz = torch.zeros(2, 3, 256, 256)\nprint(z.shape)  # torch.Size([2, 3, 256, 256])",
+    "related": [
+      "torch.ones",
+      "torch.empty",
+      "torch.full",
+      "torch.randn"
+    ],
+    "categories": [
+      "张量创建"
+    ],
+    "tips": "初始化偏置和掩码时的常用选择。"
+  },
+  {
+    "id": "torch.ones",
+    "name": "ones",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.ones",
+    "signature": "torch.ones(*size, *, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "返回全1张量，形状由 size 定义。",
+    "usage": "o = torch.ones(4, 4)",
+    "example": "import torch\no = torch.ones(3, 10)\nprint(o)",
+    "related": [
+      "torch.zeros",
+      "torch.full",
+      "torch.ones_like"
+    ],
+    "categories": [
+      "张量创建"
+    ]
+  },
+  {
+    "id": "torch.arange",
+    "name": "arange",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.arange",
+    "signature": "torch.arange(start=0, end, step=1, *, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "返回从 start 到 end(不含) 的等差一维张量。",
+    "usage": "a = torch.arange(0, 10, 2)",
+    "example": "import torch\na = torch.arange(0, 10)\nprint(a)",
+    "related": [
+      "torch.linspace",
+      "torch.logspace"
+    ],
+    "categories": [
+      "张量创建"
+    ]
+  },
+  {
+    "id": "torch.linspace",
+    "name": "linspace",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.linspace",
+    "signature": "torch.linspace(start, end, steps, *, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "创建从 start 到 end(包含) 等间距的一维张量。",
+    "usage": "x = torch.linspace(0, 1, steps=100)",
+    "example": "import torch\nx = torch.linspace(-3.14, 3.14, 2000)\nprint(x.shape)",
+    "related": [
+      "torch.arange",
+      "torch.logspace"
+    ],
+    "categories": [
+      "张量创建"
+    ]
+  },
+  {
+    "id": "torch.randn",
+    "name": "randn",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.randn",
+    "signature": "torch.randn(*size, *, generator=None, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "从标准正态分布 N(0,1) 中采样的随机张量。",
+    "params": [
+      {
+        "name": "size",
+        "type": "int...",
+        "desc": "输出张量的形状"
+      }
+    ],
+    "usage": "x = torch.randn(3, 32, 32)",
+    "example": "import torch\nx = torch.randn(16, 3, 224, 224)\nprint(x.mean(), x.std())",
+    "related": [
+      "torch.rand",
+      "torch.randn_like",
+      "torch.normal"
+    ],
+    "categories": [
+      "张量创建",
+      "随机"
+    ],
+    "tips": "常用于权重初始化，如 Xavier 初始化。"
+  },
+  {
+    "id": "torch.rand",
+    "name": "rand",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.rand",
+    "signature": "torch.rand(*size, *, generator=None, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "从 [0, 1) 均匀分布中采样的随机张量。",
+    "usage": "x = torch.rand(4, 4)",
+    "example": "import torch\nx = torch.rand(5, 3)\nprint(x.min(), x.max())",
+    "related": [
+      "torch.randn",
+      "torch.randint",
+      "torch.randperm"
+    ],
+    "categories": [
+      "张量创建",
+      "随机"
+    ]
+  },
+  {
+    "id": "torch.eye",
+    "name": "eye",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.eye",
+    "signature": "torch.eye(n, m=None, *, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "返回二维单位矩阵张量。",
+    "usage": "I = torch.eye(3)",
+    "example": "import torch\nI = torch.eye(4)\nprint(I)",
+    "related": [
+      "torch.diag"
+    ],
+    "categories": [
+      "张量创建"
+    ]
+  },
+  {
+    "id": "torch.full",
+    "name": "full",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.full",
+    "signature": "torch.full(size, fill_value, *, out=None, dtype=None, device=None, requires_grad=False)",
+    "description": "创建一个填充为指定值的张量。",
+    "usage": "f = torch.full((3, 3), 3.14)",
+    "example": "import torch\nf = torch.full((2, 4), -1)\nprint(f)",
+    "related": [
+      "torch.zeros",
+      "torch.ones"
+    ],
+    "categories": [
+      "张量创建"
+    ]
+  },
+  {
+    "id": "torch.from_numpy",
+    "name": "from_numpy",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.from_numpy",
+    "signature": "torch.from_numpy(ndarray)",
+    "description": "将 NumPy ndarray 转换为 PyTorch 张量（共享内存）。",
+    "usage": "tensor = torch.from_numpy(np_array)",
+    "example": "import torch\nimport numpy as np\narr = np.array([1, 2, 3])\nt = torch.from_numpy(arr)\narr[0] = 99\nprint(t)  # 也变了！",
+    "related": [
+      "torch.tensor",
+      "torch.as_tensor",
+      "tensor.numpy"
+    ],
+    "categories": [
+      "张量创建",
+      "与NumPy互转"
+    ],
+    "tips": "返回的张量与 ndarray 共享内存，修改一个会影响另一个。"
+  },
+  {
+    "id": "torch.as_tensor",
+    "name": "as_tensor",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.as_tensor",
+    "signature": "torch.as_tensor(data, dtype=None, device=None)",
+    "description": "将数据转换为张量，尽可能不拷贝。",
+    "usage": "x = torch.as_tensor(data)",
+    "example": "import torch\nimport numpy as np\narr = np.array([1, 2, 3])\nt = torch.as_tensor(arr)\nprint(t)",
+    "related": [
+      "torch.tensor",
+      "torch.from_numpy"
+    ],
+    "categories": [
+      "张量创建"
+    ],
+    "tips": "不会拷贝 numpy 数组数据，推荐用于性能敏感场景。"
+  },
+  {
+    "id": "torch.cat",
+    "name": "cat",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.cat",
+    "signature": "torch.cat(tensors, dim=0, *, out=None)",
+    "description": "在给定维度上拼接张量序列。",
+    "params": [
+      {
+        "name": "tensors",
+        "type": "sequence",
+        "desc": "要拼接的张量列表"
+      },
+      {
+        "name": "dim",
+        "type": "int",
+        "desc": "拼接维度"
+      }
+    ],
+    "usage": "result = torch.cat([x, y, z], dim=0)",
+    "example": "import torch\nx = torch.randn(2, 3)\ny = torch.randn(3, 3)\nz = torch.randn(4, 3)\nresult = torch.cat([x, y, z], dim=0)\nprint(result.shape)  # torch.Size([9, 3])",
+    "related": [
+      "torch.stack",
+      "torch.split",
+      "torch.chunk"
+    ],
+    "categories": [
+      "张量操作",
+      "拼接与分割"
+    ],
+    "tips": ""
+  },
+  {
+    "id": "torch.stack",
+    "name": "stack",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.stack",
+    "signature": "torch.stack(tensors, dim=0, *, out=None)",
+    "description": "沿新维度拼接张量序列。所有张量必须形状相同。",
+    "usage": "result = torch.stack([a, b, c], dim=0)",
+    "example": "import torch\na = torch.randn(3)\nb = torch.randn(3)\nc = torch.randn(3)\nstacked = torch.stack([a, b, c], dim=0)\nprint(stacked.shape)  # torch.Size([3, 3])",
+    "related": [
+      "torch.cat",
+      "torch.split"
+    ],
+    "categories": [
+      "张量操作",
+      "拼接与分割"
+    ],
+    "tips": "stack 会增加新维度，cat 在已有维度上拼接。"
+  },
+  {
+    "id": "torch.reshape",
+    "name": "reshape",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.reshape",
+    "signature": "torch.reshape(input, shape)",
+    "description": "返回与 input 数据相同但形状不同的张量。",
+    "usage": "x = torch.reshape(a, (2, 8))",
+    "example": "import torch\na = torch.arange(16)\nb = torch.reshape(a, (4, 4))\nprint(b)",
+    "related": [
+      "torch.Tensor.view",
+      "Tensor.permute",
+      "torch.flatten"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ],
+    "tips": "reshape 可能返回视图或拷贝；想要确保视图用 view(需要张量连续)。"
+  },
+  {
+    "id": "torch.view",
+    "name": "view",
+    "library": "PyTorch",
+    "module": "Torch.Tensor",
+    "full_name": "Tensor.view",
+    "signature": "Tensor.view(*shape)",
+    "description": "返回与 self 共享数据但形状不同的新张量。",
+    "usage": "x = t.view(-1, 10)",
+    "example": "import torch\nx = torch.randn(4, 4)\ny = x.view(16)\nz = x.view(-1, 8)\nprint(y.shape, z.shape)",
+    "related": [
+      "torch.reshape",
+      "Tensor.permute",
+      "torch.flatten"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ],
+    "tips": "view 仅对连续张量有效；若报错请先调用 .contiguous()。"
+  },
+  {
+    "id": "torch.permute",
+    "name": "permute",
+    "library": "PyTorch",
+    "module": "Torch.Tensor",
+    "full_name": "Tensor.permute",
+    "signature": "Tensor.permute(*dims)",
+    "description": "返回维度重排后的视图。",
+    "usage": "x = t.permute(0, 2, 1)",
+    "example": "import torch\nx = torch.randn(2, 3, 4)\ny = x.permute(2, 0, 1)\nprint(y.shape)  # torch.Size([4, 2, 3])",
+    "related": [
+      "Tensor.transpose",
+      "Tensor.view",
+      "torch.movedim"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ],
+    "tips": "图像数据常从 (B,C,H,W) 转 (B,H,W,C) 用于可视化。"
+  },
+  {
+    "id": "torch.squeeze",
+    "name": "squeeze",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.squeeze",
+    "signature": "torch.squeeze(input, dim=None)",
+    "description": "去除张量中大小为 1 的维度。",
+    "usage": "x = torch.squeeze(t, dim=0)",
+    "example": "import torch\nx = torch.zeros(1, 3, 1, 5)\ny = torch.squeeze(x)\nprint(y.shape)  # torch.Size([3, 5])",
+    "related": [
+      "torch.unsqueeze",
+      "Tensor.flatten"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ]
+  },
+  {
+    "id": "torch.unsqueeze",
+    "name": "unsqueeze",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.unsqueeze",
+    "signature": "torch.unsqueeze(input, dim)",
+    "description": "在指定位置插入大小为 1 的维度。",
+    "usage": "x = torch.unsqueeze(t, dim=0)",
+    "example": "import torch\nx = torch.tensor([1, 2, 3])\ny = torch.unsqueeze(x, dim=0)\nprint(y.shape)  # torch.Size([1, 3])",
+    "related": [
+      "torch.squeeze"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ],
+    "tips": "单张图像添加 batch 维度：img.unsqueeze(0)。"
+  },
+  {
+    "id": "torch.flatten",
+    "name": "flatten",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.flatten",
+    "signature": "torch.flatten(input, start_dim=0, end_dim=-1)",
+    "description": "将 start_dim 到 end_dim 的维度展平。",
+    "usage": "x = torch.flatten(t, start_dim=1)",
+    "example": "import torch\nt = torch.randn(16, 3, 32, 32)\nflat = torch.flatten(t, start_dim=1)\nprint(flat.shape)  # torch.Size([16, 3072])",
+    "related": [
+      "Tensor.view",
+      "nn.Flatten",
+      "torch.reshape"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ],
+    "tips": "CNN 到全连接层的过渡：start_dim=1 保留 batch 维度。"
+  },
+  {
+    "id": "torch.transpose",
+    "name": "transpose",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.transpose",
+    "signature": "torch.transpose(input, dim0, dim1)",
+    "description": "交换张量的两个维度。",
+    "usage": "x = torch.transpose(t, 0, 1)",
+    "example": "import torch\nx = torch.randn(2, 3)\ny = torch.transpose(x, 0, 1)\nprint(y.shape)  # torch.Size([3, 2])",
+    "related": [
+      "Tensor.permute",
+      "Tensor.t",
+      "torch.movedim"
+    ],
+    "categories": [
+      "张量操作",
+      "形状变换"
+    ]
+  },
+  {
+    "id": "torch.clamp",
+    "name": "clamp",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.clamp",
+    "signature": "torch.clamp(input, min=None, max=None, *, out=None)",
+    "description": "将张量元素限制在 [min, max] 范围内。",
+    "usage": "x = torch.clamp(t, min=-0.5, max=0.5)",
+    "example": "import torch\ngrad = torch.randn(5, 5) * 2\ngrad = torch.clamp(grad, min=-1.0, max=1.0)\nprint(grad)",
+    "related": [
+      "torch.clip",
+      "torch.relu"
+    ],
+    "categories": [
+      "张量操作",
+      "数学运算"
+    ],
+    "tips": "梯度裁剪(gradient clipping)，防止梯度爆炸。"
+  },
+  {
+    "id": "torch.argmax",
+    "name": "argmax",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.argmax",
+    "signature": "torch.argmax(input, dim=None, keepdim=False)",
+    "description": "返回指定维度上最大值的索引。",
+    "usage": "pred = torch.argmax(logits, dim=1)",
+    "example": "import torch\nlogits = torch.randn(4, 10)\npredictions = torch.argmax(logits, dim=1)\nprint(predictions)",
+    "related": [
+      "torch.argmin",
+      "torch.max",
+      "torch.topk"
+    ],
+    "categories": [
+      "张量操作",
+      "比较"
+    ],
+    "tips": "分类任务中常用 argmax(dim=1) 获取预测类别。"
+  },
+  {
+    "id": "torch.topk",
+    "name": "topk",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.topk",
+    "signature": "torch.topk(input, k, dim=None, largest=True, sorted=True, *, out=None)",
+    "description": "返回指定维度上最大的 k 个元素及索引。",
+    "usage": "values, indices = torch.topk(x, k=5, dim=1)",
+    "example": "import torch\nx = torch.randn(3, 10)\nvalues, indices = torch.topk(x, k=3, dim=1)\nprint(values, indices)",
+    "related": [
+      "torch.argmax",
+      "torch.argsort",
+      "torch.kthvalue"
+    ],
+    "categories": [
+      "张量操作",
+      "比较"
+    ],
+    "tips": "常用于 Top-K 准确率计算和 Beam Search。"
+  },
+  {
+    "id": "torch.mm",
+    "name": "mm",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.mm",
+    "signature": "torch.mm(input, mat2, *, out=None)",
+    "description": "二维矩阵乘法（不支持广播）。",
+    "usage": "result = torch.mm(a, b)",
+    "example": "import torch\na = torch.randn(3, 4)\nb = torch.randn(4, 5)\nc = torch.mm(a, b)\nprint(c.shape)  # torch.Size([3, 5])",
+    "related": [
+      "torch.matmul",
+      "torch.bmm",
+      "torch.mv"
+    ],
+    "categories": [
+      "张量操作",
+      "数学运算"
+    ]
+  },
+  {
+    "id": "torch.matmul",
+    "name": "matmul",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.matmul",
+    "signature": "torch.matmul(input, other, *, out=None)",
+    "description": "两个张量的矩阵乘积，支持广播。",
+    "usage": "result = torch.matmul(A, B)",
+    "example": "import torch\nA = torch.randn(10, 3, 4)\nB = torch.randn(10, 4, 5)\nC = torch.matmul(A, B)\nprint(C.shape)  # torch.Size([10, 3, 5])",
+    "related": [
+      "torch.mm",
+      "torch.bmm",
+      "@ 运算符"
+    ],
+    "categories": [
+      "张量操作",
+      "数学运算"
+    ],
+    "tips": "推荐使用 @ 运算符: C = A @ B。"
+  },
+  {
+    "id": "torch.sum",
+    "name": "sum",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.sum",
+    "signature": "torch.sum(input, dim=None, *, dtype=None)",
+    "description": "返回所有元素的和或沿指定维度的和。",
+    "usage": "total = torch.sum(x)",
+    "example": "import torch\nx = torch.randn(4, 4)\nprint(torch.sum(x, dim=0).shape)  # torch.Size([4])",
+    "related": [
+      "torch.mean",
+      "torch.std",
+      "Tensor.sum"
+    ],
+    "categories": [
+      "张量操作",
+      "归约操作"
+    ]
+  },
+  {
+    "id": "torch.mean",
+    "name": "mean",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.mean",
+    "signature": "torch.mean(input, dim=None, keepdim=False, *, dtype=None, out=None)",
+    "description": "返回平均值或沿指定维度的平均值。",
+    "usage": "avg = torch.mean(x, dim=0)",
+    "example": "import torch\nx = torch.randn(32, 10)\nbatch_mean = torch.mean(x, dim=0)\nprint(batch_mean.shape)",
+    "related": [
+      "torch.sum",
+      "torch.std",
+      "torch.var"
+    ],
+    "categories": [
+      "张量操作",
+      "归约操作"
+    ]
+  },
+  {
+    "id": "torch.where",
+    "name": "where",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.where",
+    "signature": "torch.where(condition, input, other)",
+    "description": "根据条件从 input 或 other 中选择元素。",
+    "usage": "result = torch.where(condition, x, y)",
+    "example": "import torch\nx = torch.randn(3, 3)\ncondition = x > 0\nresult = torch.where(condition, x, torch.zeros_like(x))\nprint(result)",
+    "related": [
+      "torch.masked_select",
+      "torch.nonzero"
+    ],
+    "categories": [
+      "张量操作",
+      "条件操作"
+    ],
+    "tips": "实现 ReLU: torch.where(x > 0, x, 0)。"
+  },
+  {
+    "id": "torch.sort",
+    "name": "sort",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.sort",
+    "signature": "torch.sort(input, dim=-1, descending=False, *, out=None)",
+    "description": "沿指定维度排序，返回排序后的值和索引。",
+    "usage": "sorted_vals, sorted_indices = torch.sort(x, dim=1)",
+    "example": "import torch\nx = torch.randn(5, 10)\nvals, indices = torch.sort(x, dim=1, descending=True)\nprint(vals.shape)",
+    "related": [
+      "torch.argsort",
+      "torch.topk"
+    ],
+    "categories": [
+      "张量操作",
+      "排序"
+    ]
+  },
+  {
+    "id": "torch.save",
+    "name": "save",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.save",
+    "signature": "torch.save(obj, f, pickle_module=pickle, ...)",
+    "description": "将对象保存到磁盘（pickle）。常用于保存模型。",
+    "usage": "torch.save(model.state_dict(), 'model.pth')",
+    "example": "import torch\nmodel = torch.nn.Linear(10, 2)\ntorch.save(model.state_dict(), 'weights.pth')",
+    "related": [
+      "torch.load",
+      "model.state_dict",
+      "model.load_state_dict"
+    ],
+    "categories": [
+      "模型保存与加载"
+    ],
+    "tips": "推荐保存 state_dict 而非整个模型，更具可移植性。"
+  },
+  {
+    "id": "torch.load",
+    "name": "load",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.load",
+    "signature": "torch.load(f, map_location=None, weights_only=False, ...)",
+    "description": "加载用 torch.save() 保存的对象。",
+    "usage": "state_dict = torch.load('model.pth', map_location='cpu')",
+    "example": "import torch\nstate_dict = torch.load('model.pth', map_location='cpu', weights_only=True)\nmodel.load_state_dict(state_dict)",
+    "related": [
+      "torch.save",
+      "model.load_state_dict"
+    ],
+    "categories": [
+      "模型保存与加载"
+    ],
+    "tips": "使用 weights_only=True 提高安全性；map_location 可在 CPU 加载 GPU 模型。"
+  },
+  {
+    "id": "torch.nn.Linear",
+    "name": "Linear",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Linear",
+    "signature": "nn.Linear(in_features, out_features, bias=True, device=None, dtype=None)",
+    "description": "全连接层，线性变换 y = xA^T + b。",
+    "params": [
+      {
+        "name": "in_features",
+        "type": "int",
+        "desc": "输入特征数"
+      },
+      {
+        "name": "out_features",
+        "type": "int",
+        "desc": "输出特征数"
+      },
+      {
+        "name": "bias",
+        "type": "bool",
+        "desc": "是否包含偏置"
+      }
+    ],
+    "returns": {
+      "type": "Tensor",
+      "desc": "形状为 (*, out_features) 的输出"
+    },
+    "usage": "fc = nn.Linear(512, 10)\noutput = fc(input_tensor)",
+    "example": "import torch\nimport torch.nn as nn\nfc = nn.Linear(784, 256)\nx = torch.randn(32, 784)\ny = fc(x)\nprint(y.shape)  # torch.Size([32, 256])",
+    "related": [
+      "nn.Bilinear",
+      "nn.Identity",
+      "nn.LazyLinear"
+    ],
+    "categories": [
+      "神经网络层",
+      "线性层"
+    ],
+    "tips": "全连接层之前通常需要 Flatten；配合 ReLU 等激活函数使用。"
+  },
+  {
+    "id": "torch.nn.Conv2d",
+    "name": "Conv2d",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Conv2d",
+    "signature": "nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')",
+    "description": "二维卷积层。卷积核在输入图像上滑动进行特征提取。",
+    "params": [
+      {
+        "name": "in_channels",
+        "type": "int",
+        "desc": "输入通道数"
+      },
+      {
+        "name": "out_channels",
+        "type": "int",
+        "desc": "输出通道数（卷积核数）"
+      },
+      {
+        "name": "kernel_size",
+        "type": "int/tuple",
+        "desc": "卷积核大小"
+      },
+      {
+        "name": "stride",
+        "type": "int/tuple",
+        "desc": "步长，默认1"
+      },
+      {
+        "name": "padding",
+        "type": "int/tuple/str",
+        "desc": "填充大小"
+      }
+    ],
+    "returns": {
+      "type": "Tensor",
+      "desc": "(N, C_out, H_out, W_out)"
+    },
+    "usage": "conv = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)\noutput = conv(input_tensor)",
+    "example": "import torch\nimport torch.nn as nn\nconv = nn.Conv2d(3, 64, kernel_size=3, padding=1)\nx = torch.randn(16, 3, 32, 32)\ny = conv(x)\nprint(y.shape)  # torch.Size([16, 64, 32, 32])",
+    "related": [
+      "nn.Conv1d",
+      "nn.Conv3d",
+      "nn.ConvTranspose2d",
+      "nn.functional.conv2d"
+    ],
+    "categories": [
+      "神经网络层",
+      "卷积层"
+    ],
+    "tips": "kernel_size=3, padding=1 保持空间尺寸。H_out = (H + 2P - K)/S + 1。"
+  },
+  {
+    "id": "torch.nn.ConvTranspose2d",
+    "name": "ConvTranspose2d",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.ConvTranspose2d",
+    "signature": "nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0, ...)",
+    "description": "二维转置卷积层(反卷积)，用于上采样。",
+    "usage": "deconv = nn.ConvTranspose2d(64, 3, kernel_size=4, stride=2, padding=1)",
+    "example": "import torch\nimport torch.nn as nn\ndeconv = nn.ConvTranspose2d(64, 3, 4, stride=2, padding=1)\nx = torch.randn(1, 64, 8, 8)\ny = deconv(x)\nprint(y.shape)  # torch.Size([1, 3, 16, 16])",
+    "related": [
+      "nn.Conv2d",
+      "nn.Upsample",
+      "nn.PixelShuffle"
+    ],
+    "categories": [
+      "神经网络层",
+      "卷积层"
+    ],
+    "tips": "GAN 生成器和语义分割解码器中常用；注意可能产生棋盘伪影。"
+  },
+  {
+    "id": "torch.nn.BatchNorm2d",
+    "name": "BatchNorm2d",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.BatchNorm2d",
+    "signature": "nn.BatchNorm2d(num_features, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)",
+    "description": "4D 输入(含通道的 2D 小批量)的批量归一化。",
+    "params": [
+      {
+        "name": "num_features",
+        "type": "int",
+        "desc": "输入通道数"
+      },
+      {
+        "name": "eps",
+        "type": "float",
+        "desc": "防止除零"
+      },
+      {
+        "name": "momentum",
+        "type": "float",
+        "desc": "running_mean/var 的动量"
+      }
+    ],
+    "usage": "bn = nn.BatchNorm2d(64)\noutput = bn(conv_output)",
+    "example": "import torch\nimport torch.nn as nn\nbn = nn.BatchNorm2d(64)\nx = torch.randn(16, 64, 32, 32)\ny = bn(x)\nprint(y.shape)",
+    "related": [
+      "nn.BatchNorm1d",
+      "nn.LayerNorm",
+      "nn.InstanceNorm2d",
+      "nn.GroupNorm"
+    ],
+    "categories": [
+      "神经网络层",
+      "归一化层"
+    ],
+    "tips": "BN 加速训练并允许更高学习率。训练时 model.train()，推理时 model.eval()。"
+  },
+  {
+    "id": "torch.nn.LayerNorm",
+    "name": "LayerNorm",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.LayerNorm",
+    "signature": "nn.LayerNorm(normalized_shape, eps=1e-05, elementwise_affine=True, bias=True)",
+    "description": "层归一化，独立于 batch size。",
+    "usage": "ln = nn.LayerNorm(512)",
+    "example": "import torch\nimport torch.nn as nn\nln = nn.LayerNorm(512)\nx = torch.randn(32, 10, 512)\ny = ln(x)\nprint(y.shape)",
+    "related": [
+      "nn.BatchNorm1d",
+      "nn.GroupNorm",
+      "nn.InstanceNorm1d"
+    ],
+    "categories": [
+      "神经网络层",
+      "归一化层"
+    ],
+    "tips": "Transformer 中普遍使用 LayerNorm，不依赖 batch size。"
+  },
+  {
+    "id": "torch.nn.Dropout",
+    "name": "Dropout",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Dropout",
+    "signature": "nn.Dropout(p=0.5, inplace=False)",
+    "description": "以概率 p 将元素随机置零，正则化防过拟合。",
+    "params": [
+      {
+        "name": "p",
+        "type": "float",
+        "desc": "置零概率，默认0.5"
+      },
+      {
+        "name": "inplace",
+        "type": "bool",
+        "desc": "是否原地操作"
+      }
+    ],
+    "usage": "dropout = nn.Dropout(p=0.2)\noutput = dropout(x)",
+    "example": "import torch\nimport torch.nn as nn\ndropout = nn.Dropout(p=0.5)\nx = torch.ones(10)\ny = dropout(x)\nprint(y)",
+    "related": [
+      "nn.Dropout2d",
+      "nn.Dropout3d",
+      "nn.AlphaDropout"
+    ],
+    "categories": [
+      "神经网络层",
+      "正则化"
+    ],
+    "tips": "训练时 model.train() 自动启用，eval() 自动关闭。"
+  },
+  {
+    "id": "torch.nn.Embedding",
+    "name": "Embedding",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Embedding",
+    "signature": "nn.Embedding(num_embeddings, embedding_dim, padding_idx=None, ...)",
+    "description": "词嵌入查找表，存储固定大小词典的嵌入向量。",
+    "params": [
+      {
+        "name": "num_embeddings",
+        "type": "int",
+        "desc": "词典大小"
+      },
+      {
+        "name": "embedding_dim",
+        "type": "int",
+        "desc": "嵌入维度"
+      },
+      {
+        "name": "padding_idx",
+        "type": "int",
+        "desc": "填充 token 索引"
+      }
+    ],
+    "usage": "embedding = nn.Embedding(10000, 256, padding_idx=0)\nemb = embedding(input_ids)",
+    "example": "import torch\nimport torch.nn as nn\nembedding = nn.Embedding(10000, 512)\ninput_ids = torch.randint(0, 10000, (32, 50))\nemb = embedding(input_ids)\nprint(emb.shape)  # torch.Size([32, 50, 512])",
+    "related": [
+      "nn.EmbeddingBag"
+    ],
+    "categories": [
+      "神经网络层",
+      "嵌入层"
+    ],
+    "tips": "NLP 模型第一层，将 token ID 映射为稠密向量。"
+  },
+  {
+    "id": "torch.nn.LSTM",
+    "name": "LSTM",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.LSTM",
+    "signature": "nn.LSTM(input_size, hidden_size, num_layers=1, bias=True, batch_first=False, dropout=0, bidirectional=False)",
+    "description": "长短期记忆网络循环层。",
+    "params": [
+      {
+        "name": "input_size",
+        "type": "int",
+        "desc": "输入特征数"
+      },
+      {
+        "name": "hidden_size",
+        "type": "int",
+        "desc": "隐状态维度"
+      },
+      {
+        "name": "num_layers",
+        "type": "int",
+        "desc": "层数"
+      },
+      {
+        "name": "batch_first",
+        "type": "bool",
+        "desc": "输入形状 (batch, seq, feature)"
+      },
+      {
+        "name": "bidirectional",
+        "type": "bool",
+        "desc": "是否双向"
+      }
+    ],
+    "returns": {
+      "type": "(output, (h_n, c_n))"
+    },
+    "usage": "lstm = nn.LSTM(256, 512, num_layers=2, batch_first=True)\noutput, (h_n, c_n) = lstm(x)",
+    "example": "import torch\nimport torch.nn as nn\nlstm = nn.LSTM(10, 20, num_layers=2, batch_first=True)\nx = torch.randn(32, 15, 10)\noutput, (hn, cn) = lstm(x)\nprint(output.shape)  # torch.Size([32, 15, 20])",
+    "related": [
+      "nn.GRU",
+      "nn.RNN",
+      "nn.LSTMCell"
+    ],
+    "categories": [
+      "神经网络层",
+      "循环层"
+    ],
+    "tips": "batch_first=True 让输入为 (batch, seq, feature)，更直观。"
+  },
+  {
+    "id": "torch.nn.GRU",
+    "name": "GRU",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.GRU",
+    "signature": "nn.GRU(input_size, hidden_size, num_layers=1, bias=True, batch_first=False, dropout=0, bidirectional=False)",
+    "description": "门控循环单元，LSTM 的简化变体。",
+    "usage": "gru = nn.GRU(256, 512, num_layers=2, batch_first=True)\noutput, h_n = gru(x)",
+    "example": "import torch\nimport torch.nn as nn\ngru = nn.GRU(128, 256, batch_first=True)\nx = torch.randn(16, 10, 128)\noutput, hn = gru(x)\nprint(output.shape)  # torch.Size([16, 10, 256])",
+    "related": [
+      "nn.LSTM",
+      "nn.RNN",
+      "nn.GRUCell"
+    ],
+    "categories": [
+      "神经网络层",
+      "循环层"
+    ],
+    "tips": "GRU 参数更少，计算更快，与 LSTM 效果相当。"
+  },
+  {
+    "id": "torch.nn.MaxPool2d",
+    "name": "MaxPool2d",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.MaxPool2d",
+    "signature": "nn.MaxPool2d(kernel_size, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False)",
+    "description": "二维最大池化层，降低空间分辨率。",
+    "usage": "pool = nn.MaxPool2d(kernel_size=2, stride=2)\noutput = pool(x)",
+    "example": "import torch\nimport torch.nn as nn\npool = nn.MaxPool2d(2, stride=2)\nx = torch.randn(1, 64, 32, 32)\ny = pool(x)\nprint(y.shape)  # torch.Size([1, 64, 16, 16])",
+    "related": [
+      "nn.AvgPool2d",
+      "nn.AdaptiveMaxPool2d",
+      "nn.AdaptiveAvgPool2d"
+    ],
+    "categories": [
+      "神经网络层",
+      "池化层"
+    ],
+    "tips": "最大池化降低计算量并增强平移不变性。"
+  },
+  {
+    "id": "torch.nn.AdaptiveAvgPool2d",
+    "name": "AdaptiveAvgPool2d",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.AdaptiveAvgPool2d",
+    "signature": "nn.AdaptiveAvgPool2d(output_size)",
+    "description": "自适应平均池化，输出指定大小的特征图。",
+    "usage": "gap = nn.AdaptiveAvgPool2d(1)\noutput = gap(x)",
+    "example": "import torch\nimport torch.nn as nn\ngap = nn.AdaptiveAvgPool2d(1)\nx = torch.randn(16, 2048, 7, 7)\ny = gap(x)\nprint(y.shape)  # torch.Size([16, 2048, 1, 1])",
+    "related": [
+      "nn.AdaptiveMaxPool2d",
+      "nn.MaxPool2d",
+      "nn.AvgPool2d"
+    ],
+    "categories": [
+      "神经网络层",
+      "池化层"
+    ],
+    "tips": "全局平均池化(GAP)替代全连接层，大幅减少参数。"
+  },
+  {
+    "id": "torch.nn.Sequential",
+    "name": "Sequential",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Sequential",
+    "signature": "nn.Sequential(*args)",
+    "description": "按顺序执行模块的容器。",
+    "usage": "model = nn.Sequential(nn.Linear(10, 20), nn.ReLU(), nn.Linear(20, 1))",
+    "example": "import torch\nimport torch.nn as nn\nmodel = nn.Sequential(\n    nn.Conv2d(1, 20, 5), nn.ReLU(), nn.MaxPool2d(2),\n    nn.Conv2d(20, 50, 5), nn.ReLU(), nn.MaxPool2d(2),\n    nn.Flatten(), nn.Linear(800, 500), nn.ReLU(), nn.Linear(500, 10)\n)\nx = torch.randn(32, 1, 28, 28)\ny = model(x)\nprint(y.shape)  # torch.Size([32, 10])",
+    "related": [
+      "nn.ModuleList",
+      "nn.ModuleDict"
+    ],
+    "categories": [
+      "模型构建",
+      "容器"
+    ],
+    "tips": "适用于简单前馈网络；复杂模型建议继承 nn.Module。"
+  },
+  {
+    "id": "torch.nn.Module",
+    "name": "Module",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Module",
+    "signature": "class MyModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        ...\n    def forward(self, x):\n        ...",
+    "description": "所有神经网络模块的基类。必须继承并实现 forward 方法。",
+    "usage": "class Net(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc = nn.Linear(10, 2)\n    def forward(self, x):\n        return self.fc(x)",
+    "example": "import torch\nimport torch.nn as nn\n\nclass SimpleCNN(nn.Module):\n    def __init__(self, num_classes=10):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)\n        self.fc = nn.Linear(16 * 32 * 32, num_classes)\n    def forward(self, x):\n        x = torch.relu(self.conv1(x))\n        x = x.view(x.size(0), -1)\n        return self.fc(x)\n\nmodel = SimpleCNN()",
+    "related": [
+      "nn.Sequential",
+      "nn.ModuleDict",
+      "nn.ModuleList"
+    ],
+    "categories": [
+      "模型构建"
+    ],
+    "tips": "必须在 __init__ 中调用 super().__init__()；所有可学习参数定义为类属性。"
+  },
+  {
+    "id": "torch.nn.ReLU",
+    "name": "ReLU",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.ReLU",
+    "signature": "nn.ReLU(inplace=False)",
+    "description": "逐元素 ReLU 激活函数：ReLU(x) = max(0, x)。",
+    "usage": "activation = nn.ReLU()\noutput = activation(x)",
+    "example": "import torch\nimport torch.nn as nn\nrelu = nn.ReLU()\nx = torch.randn(3, 3)\ny = relu(x)\nprint(y)",
+    "related": [
+      "nn.LeakyReLU",
+      "nn.PReLU",
+      "nn.GELU",
+      "nn.Sigmoid"
+    ],
+    "categories": [
+      "激活函数",
+      "神经网络层"
+    ],
+    "tips": "最常用的激活函数之一；Transformer 中推荐用 GELU。"
+  },
+  {
+    "id": "torch.nn.Sigmoid",
+    "name": "Sigmoid",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Sigmoid",
+    "signature": "nn.Sigmoid()",
+    "description": "逐元素 Sigmoid 函数：sigmoid(x) = 1/(1+exp(-x))。",
+    "usage": "activation = nn.Sigmoid()\noutput = activation(x)",
+    "example": "import torch\nimport torch.nn as nn\nsigmoid = nn.Sigmoid()\nx = torch.randn(3)\ny = sigmoid(x)\nprint(y)",
+    "related": [
+      "nn.Tanh",
+      "nn.Softmax"
+    ],
+    "categories": [
+      "激活函数"
+    ],
+    "tips": "二分类输出层常用。"
+  },
+  {
+    "id": "torch.nn.Softmax",
+    "name": "Softmax",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Softmax",
+    "signature": "nn.Softmax(dim=None)",
+    "description": "沿指定维度应用 Softmax 函数，输出概率分布。",
+    "usage": "softmax = nn.Softmax(dim=1)\nprobs = softmax(logits)",
+    "example": "import torch\nimport torch.nn as nn\nsoftmax = nn.Softmax(dim=1)\nlogits = torch.randn(16, 10)\nprobs = softmax(logits)\nprint(probs.sum(dim=1))",
+    "related": [
+      "nn.LogSoftmax",
+      "nn.Sigmoid",
+      "F.softmax"
+    ],
+    "categories": [
+      "激活函数"
+    ]
+  },
+  {
+    "id": "torch.nn.Tanh",
+    "name": "Tanh",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.Tanh",
+    "signature": "nn.Tanh()",
+    "description": "逐元素双曲正切函数，输出范围 (-1, 1)。",
+    "usage": "activation = nn.Tanh()\noutput = activation(x)",
+    "example": "import torch\nimport torch.nn as nn\ntanh = nn.Tanh()\nx = torch.randn(4)\ny = tanh(x)\nprint(y)",
+    "related": [
+      "nn.Sigmoid",
+      "nn.ReLU"
+    ],
+    "categories": [
+      "激活函数"
+    ],
+    "tips": "常用于 RNN 隐状态更新。"
+  },
+  {
+    "id": "torch.nn.LeakyReLU",
+    "name": "LeakyReLU",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.LeakyReLU",
+    "signature": "nn.LeakyReLU(negative_slope=0.01, inplace=False)",
+    "description": "Leaky ReLU 激活函数，允许负输入有小梯度。",
+    "usage": "activation = nn.LeakyReLU(negative_slope=0.2)\noutput = activation(x)",
+    "example": "import torch\nimport torch.nn as nn\nleaky = nn.LeakyReLU(0.2)\nx = torch.randn(3, 3)\ny = leaky(x)\nprint(y)",
+    "related": [
+      "nn.ReLU",
+      "nn.PReLU",
+      "nn.GELU"
+    ],
+    "categories": [
+      "激活函数"
+    ],
+    "tips": "解决 ReLU 死亡神经元问题; GAN 中常用 negative_slope=0.2。"
+  },
+  {
+    "id": "torch.nn.functional.relu",
+    "name": "relu",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.relu",
+    "signature": "F.relu(input, inplace=False)",
+    "description": "逐元素 ReLU 函数: max(0, x)。",
+    "usage": "x = F.relu(tensor)",
+    "example": "import torch.nn.functional as F\nx = F.relu(torch.randn(3, 3))\nprint(x)",
+    "related": [
+      "F.leaky_relu",
+      "F.gelu",
+      "nn.ReLU"
+    ],
+    "categories": [
+      "激活函数"
+    ]
+  },
+  {
+    "id": "torch.nn.functional.softmax",
+    "name": "softmax",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.softmax",
+    "signature": "F.softmax(input, dim=None, dtype=None)",
+    "description": "沿指定维度应用 softmax，输出概率分布。",
+    "usage": "probs = F.softmax(logits, dim=1)",
+    "example": "import torch.nn.functional as F\nlogits = torch.randn(16, 10)\nprobs = F.softmax(logits, dim=1)\nprint(probs.sum(dim=1))",
+    "related": [
+      "F.log_softmax",
+      "nn.Softmax",
+      "F.sigmoid"
+    ],
+    "categories": [
+      "激活函数"
+    ],
+    "tips": "nn.CrossEntropyLoss 内部已含 softmax，不要重复使用。"
+  },
+  {
+    "id": "torch.nn.functional.sigmoid",
+    "name": "sigmoid",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.sigmoid",
+    "signature": "F.sigmoid(input)",
+    "description": "逐元素 sigmoid: 1/(1+exp(-x))。",
+    "usage": "x = F.sigmoid(tensor)",
+    "example": "import torch.nn.functional as F\nx = F.sigmoid(torch.randn(5))\nprint(x)",
+    "related": [
+      "torch.sigmoid",
+      "nn.Sigmoid"
+    ],
+    "categories": [
+      "激活函数"
+    ]
+  },
+  {
+    "id": "torch.nn.functional.leaky_relu",
+    "name": "leaky_relu",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.leaky_relu",
+    "signature": "F.leaky_relu(input, negative_slope=0.01, inplace=False)",
+    "description": "Leaky ReLU 激活函数。",
+    "usage": "x = F.leaky_relu(tensor, negative_slope=0.2)",
+    "example": "import torch.nn.functional as F\nx = F.leaky_relu(torch.randn(3, 3), 0.01)",
+    "related": [
+      "F.relu",
+      "F.gelu",
+      "nn.LeakyReLU"
+    ],
+    "categories": [
+      "激活函数"
+    ]
+  },
+  {
+    "id": "torch.nn.functional.gelu",
+    "name": "gelu",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.gelu",
+    "signature": "F.gelu(input, approximate='none')",
+    "description": "Gaussian Error Linear Unit，Transformer 中广泛使用。",
+    "usage": "x = F.gelu(tensor)",
+    "example": "import torch.nn.functional as F\nx = F.gelu(torch.randn(5))\nprint(x)",
+    "related": [
+      "F.relu",
+      "F.silu",
+      "nn.GELU"
+    ],
+    "categories": [
+      "激活函数"
+    ],
+    "tips": "BERT、GPT 等 Transformer 默认激活函数。"
+  },
+  {
+    "id": "torch.nn.functional.cross_entropy",
+    "name": "cross_entropy",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.cross_entropy",
+    "signature": "F.cross_entropy(input, target, weight=None, ignore_index=-100, reduction='mean', label_smoothing=0.0)",
+    "description": "计算 logits 与目标间的交叉熵(内含 log_softmax + nll_loss)。",
+    "params": [
+      {
+        "name": "input",
+        "type": "Tensor",
+        "desc": "未归一化的 logits，形状(N, C)"
+      },
+      {
+        "name": "target",
+        "type": "Tensor",
+        "desc": "类别索引，形状(N,)"
+      },
+      {
+        "name": "ignore_index",
+        "type": "int",
+        "desc": "忽略的类别索引"
+      }
+    ],
+    "usage": "loss = F.cross_entropy(logits, labels)",
+    "example": "import torch\nimport torch.nn.functional as F\nlogits = torch.randn(32, 10)\nlabels = torch.randint(0, 10, (32,))\nloss = F.cross_entropy(logits, labels)\nprint(loss)",
+    "related": [
+      "nn.CrossEntropyLoss",
+      "F.nll_loss",
+      "F.binary_cross_entropy"
+    ],
+    "categories": [
+      "损失函数"
+    ],
+    "tips": "input 是未归一化 logits（不要自己先做 softmax!）；target 是类别索引。"
+  },
+  {
+    "id": "torch.nn.functional.mse_loss",
+    "name": "mse_loss",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.mse_loss",
+    "signature": "F.mse_loss(input, target, reduction='mean')",
+    "description": "均方误差损失(L2损失): (input-target)^2。",
+    "usage": "loss = F.mse_loss(pred, target)",
+    "example": "import torch.nn.functional as F\npred = torch.randn(16, 3, 224, 224)\ntarget = torch.randn(16, 3, 224, 224)\nloss = F.mse_loss(pred, target)\nprint(loss)",
+    "related": [
+      "nn.MSELoss",
+      "F.l1_loss",
+      "F.smooth_l1_loss"
+    ],
+    "categories": [
+      "损失函数"
+    ],
+    "tips": "常用于回归任务和图像重建；对异常值敏感。"
+  },
+  {
+    "id": "torch.nn.functional.binary_cross_entropy",
+    "name": "binary_cross_entropy",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.binary_cross_entropy",
+    "signature": "F.binary_cross_entropy(input, target, weight=None, reduction='mean')",
+    "description": "二分类交叉熵损失。input 应为概率值(经过 sigmoid)。",
+    "usage": "loss = F.binary_cross_entropy(torch.sigmoid(logits), labels)",
+    "example": "import torch.nn.functional as F\nlogits = torch.randn(32)\nlabels = torch.randint(0, 2, (32,)).float()\nloss = F.binary_cross_entropy(torch.sigmoid(logits), labels)",
+    "related": [
+      "nn.BCELoss",
+      "F.binary_cross_entropy_with_logits"
+    ],
+    "categories": [
+      "损失函数"
+    ],
+    "tips": "推荐使用 BCEWithLogitsLoss，数值更稳定。"
+  },
+  {
+    "id": "torch.nn.functional.interpolate",
+    "name": "interpolate",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.interpolate",
+    "signature": "F.interpolate(input, size=None, scale_factor=None, mode='nearest', align_corners=None, ...)",
+    "description": "对输入张量进行上/下采样。",
+    "usage": "x = F.interpolate(tensor, size=(224, 224), mode='bilinear')",
+    "example": "import torch\nimport torch.nn.functional as F\nx = torch.randn(1, 3, 100, 150)\ny = F.interpolate(x, size=(224, 224), mode='bilinear', align_corners=False)\nprint(y.shape)  # torch.Size([1, 3, 224, 224])",
+    "related": [
+      "nn.Upsample",
+      "nn.UpsamplingBilinear2d"
+    ],
+    "categories": [
+      "张量操作",
+      "视觉操作"
+    ],
+    "tips": "图像上采样推荐 mode='bilinear'。"
+  },
+  {
+    "id": "torch.nn.functional.conv2d",
+    "name": "conv2d",
+    "library": "PyTorch",
+    "module": "torch.nn.functional",
+    "full_name": "F.conv2d",
+    "signature": "F.conv2d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1)",
+    "description": "对输入施加二维卷积（函数式接口,需手动管理权重）。",
+    "usage": "output = F.conv2d(x, kernel_weights)",
+    "example": "import torch\nimport torch.nn.functional as F\ninput = torch.randn(1, 3, 32, 32)\nweight = torch.randn(16, 3, 3, 3)\noutput = F.conv2d(input, weight, padding=1)\nprint(output.shape)",
+    "related": [
+      "nn.Conv2d",
+      "F.conv1d",
+      "F.conv3d"
+    ],
+    "categories": [
+      "卷积层"
+    ],
+    "tips": "更灵活但需手动管理权重；训练推荐 nn.Conv2d。"
+  },
+  {
+    "id": "torch.optim.SGD",
+    "name": "SGD",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.SGD",
+    "signature": "optim.SGD(params, lr, momentum=0, dampening=0, weight_decay=0, nesterov=False)",
+    "description": "随机梯度下降优化器，可选带动量。",
+    "params": [
+      {
+        "name": "params",
+        "type": "iterable",
+        "desc": "模型参数"
+      },
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率"
+      },
+      {
+        "name": "momentum",
+        "type": "float",
+        "desc": "动量因子"
+      },
+      {
+        "name": "weight_decay",
+        "type": "float",
+        "desc": "权重衰减"
+      }
+    ],
+    "usage": "optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)",
+    "example": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nmodel = nn.Linear(10, 2)\noptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)\noptimizer.zero_grad()\nloss = model(torch.randn(32, 10)).sum()\nloss.backward()\noptimizer.step()",
+    "related": [
+      "optim.Adam",
+      "optim.AdamW",
+      "optim.RMSprop"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "图像分类中 momentum=0.9 是经典配置。"
+  },
+  {
+    "id": "torch.optim.Adam",
+    "name": "Adam",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.Adam",
+    "signature": "optim.Adam(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)",
+    "description": "Adam 优化器，结合 AdaGrad 和 RMSProp 优点。",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率，默认1e-3"
+      },
+      {
+        "name": "betas",
+        "type": "tuple",
+        "desc": "梯度一阶/二阶矩估计的系数"
+      }
+    ],
+    "usage": "optimizer = optim.Adam(model.parameters(), lr=0.001)",
+    "example": "import torch.optim as optim\noptimizer = optim.Adam(model.parameters(), lr=0.001)",
+    "related": [
+      "optim.AdamW",
+      "optim.SGD",
+      "optim.RMSprop"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "默认 lr=1e-3 适用大多数任务。推荐用 AdamW。"
+  },
+  {
+    "id": "torch.optim.AdamW",
+    "name": "AdamW",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.AdamW",
+    "signature": "optim.AdamW(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01)",
+    "description": "AdamW 优化器，将权重衰减与自适应学习率解耦。",
+    "usage": "optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)",
+    "example": "import torch.optim as optim\noptimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)",
+    "related": [
+      "optim.Adam",
+      "optim.SGD",
+      "optim.RAdam"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "Transformer 训练默认优化器；推荐 weight_decay=0.01~0.1。"
+  },
+  {
+    "id": "torch.optim.lr_scheduler.StepLR",
+    "name": "StepLR",
+    "library": "PyTorch",
+    "module": "torch.optim.lr_scheduler",
+    "full_name": "optim.lr_scheduler.StepLR",
+    "signature": "optim.lr_scheduler.StepLR(optimizer, step_size, gamma=0.1)",
+    "description": "每隔 step_size 个 epoch 学习率乘以 gamma。",
+    "usage": "scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)",
+    "example": "import torch.optim.lr_scheduler as lr_scheduler\nscheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)\nfor epoch in range(100):\n    train()\n    scheduler.step()",
+    "related": [
+      "lr_scheduler.CosineAnnealingLR",
+      "lr_scheduler.ReduceLROnPlateau"
+    ],
+    "categories": [
+      "优化器",
+      "学习率调度"
+    ]
+  },
+  {
+    "id": "torch.optim.lr_scheduler.CosineAnnealingLR",
+    "name": "CosineAnnealingLR",
+    "library": "PyTorch",
+    "module": "torch.optim.lr_scheduler",
+    "full_name": "optim.lr_scheduler.CosineAnnealingLR",
+    "signature": "optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max, eta_min=0)",
+    "description": "余弦退火学习率调度。",
+    "usage": "scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)",
+    "example": "scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)\nfor epoch in range(100):\n    train()\n    scheduler.step()",
+    "related": [
+      "lr_scheduler.StepLR",
+      "lr_scheduler.CosineAnnealingWarmRestarts"
+    ],
+    "categories": [
+      "优化器",
+      "学习率调度"
+    ],
+    "tips": "现代训练常用，平滑的学习率曲线有助于收敛。"
+  },
+  {
+    "id": "torch.optim.lr_scheduler.ReduceLROnPlateau",
+    "name": "ReduceLROnPlateau",
+    "library": "PyTorch",
+    "module": "torch.optim.lr_scheduler",
+    "full_name": "optim.lr_scheduler.ReduceLROnPlateau",
+    "signature": "optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10)",
+    "description": "当评估指标停滞时降低学习率。",
+    "usage": "scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=5)\nscheduler.step(val_loss)",
+    "example": "scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)\nfor epoch in range(100):\n    val_loss = validate()\n    scheduler.step(val_loss)",
+    "related": [
+      "lr_scheduler.StepLR",
+      "lr_scheduler.CosineAnnealingLR"
+    ],
+    "categories": [
+      "优化器",
+      "学习率调度"
+    ],
+    "tips": "需要传入验证指标，动态适应训练。"
+  },
+  {
+    "id": "torch.nn.CrossEntropyLoss",
+    "name": "CrossEntropyLoss",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.CrossEntropyLoss",
+    "signature": "nn.CrossEntropyLoss(weight=None, ignore_index=-100, reduction='mean', label_smoothing=0.0)",
+    "description": "结合 LogSoftmax 和 NLLLoss 的多分类交叉熵损失。",
+    "usage": "criterion = nn.CrossEntropyLoss()\nloss = criterion(logits, labels)",
+    "example": "import torch.nn as nn\ncriterion = nn.CrossEntropyLoss()\nlogits = torch.randn(32, 10)\nlabels = torch.randint(0, 10, (32,))\nloss = criterion(logits, labels)\nprint(loss)",
+    "related": [
+      "nn.NLLLoss",
+      "nn.BCEWithLogitsLoss",
+      "F.cross_entropy"
+    ],
+    "categories": [
+      "损失函数"
+    ],
+    "tips": "logits 不需要先过 softmax；ignore_index 可忽略填充 token。"
+  },
+  {
+    "id": "torch.nn.MSELoss",
+    "name": "MSELoss",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.MSELoss",
+    "signature": "nn.MSELoss(reduction='mean')",
+    "description": "均方误差损失: (input-target)^2 的均值或和。",
+    "usage": "criterion = nn.MSELoss()\nloss = criterion(pred, target)",
+    "example": "import torch.nn as nn\ncriterion = nn.MSELoss()\npred = torch.randn(16, 3, 224, 224)\ntarget = torch.randn(16, 3, 224, 224)\nloss = criterion(pred, target)",
+    "related": [
+      "nn.L1Loss",
+      "nn.SmoothL1Loss",
+      "F.mse_loss"
+    ],
+    "categories": [
+      "损失函数"
+    ],
+    "tips": "L2 损失对异常值敏感，可考虑 SmoothL1Loss 替代。"
+  },
+  {
+    "id": "torch.nn.BCEWithLogitsLoss",
+    "name": "BCEWithLogitsLoss",
+    "library": "PyTorch",
+    "module": "torch.nn",
+    "full_name": "nn.BCEWithLogitsLoss",
+    "signature": "nn.BCEWithLogitsLoss(weight=None, reduction='mean', pos_weight=None)",
+    "description": "结合 sigmoid 和 BCELoss，数值更稳定。",
+    "usage": "criterion = nn.BCEWithLogitsLoss()\nloss = criterion(logits, labels)",
+    "example": "criterion = nn.BCEWithLogitsLoss()\nlogits = torch.randn(32, 1)\nlabels = torch.randint(0, 2, (32, 1)).float()\nloss = criterion(logits, labels)",
+    "related": [
+      "nn.BCELoss",
+      "nn.CrossEntropyLoss"
+    ],
+    "categories": [
+      "损失函数"
+    ],
+    "tips": "多标签分类标准选择；pos_weight 处理类别不平衡。"
+  },
+  {
+    "id": "torch.utils.data.DataLoader",
+    "name": "DataLoader",
+    "library": "PyTorch",
+    "module": "torch.utils.data",
+    "full_name": "DataLoader",
+    "signature": "DataLoader(dataset, batch_size=1, shuffle=None, num_workers=0, collate_fn=None, pin_memory=False, drop_last=False, ...)",
+    "description": "将 Dataset 封装为可迭代批量加载器。",
+    "params": [
+      {
+        "name": "dataset",
+        "type": "Dataset"
+      },
+      {
+        "name": "batch_size",
+        "type": "int",
+        "desc": "批量大小"
+      },
+      {
+        "name": "shuffle",
+        "type": "bool",
+        "desc": "是否打乱"
+      },
+      {
+        "name": "num_workers",
+        "type": "int",
+        "desc": "子进程数"
+      },
+      {
+        "name": "pin_memory",
+        "type": "bool",
+        "desc": "锁页内存(GPU加速)"
+      }
+    ],
+    "usage": "loader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=4)\nfor x, y in loader:\n    ...",
+    "example": "from torch.utils.data import DataLoader, TensorDataset\ndata = torch.randn(1000, 28, 28)\nlabels = torch.randint(0, 10, (1000,))\ndataset = TensorDataset(data, labels)\nloader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=4)\nfor x, y in loader:\n    print(x.shape)",
+    "related": [
+      "Dataset",
+      "TensorDataset",
+      "torchvision.datasets"
+    ],
+    "categories": [
+      "数据处理"
+    ],
+    "tips": "num_workers 设为 CPU 核数/4-8；pin_memory=True 加速 GPU 传输。"
+  },
+  {
+    "id": "torch.utils.data.Dataset",
+    "name": "Dataset",
+    "library": "PyTorch",
+    "module": "torch.utils.data",
+    "full_name": "Dataset",
+    "signature": "class MyDataset(Dataset):\n    def __init__(self): ...\n    def __len__(self): ...\n    def __getitem__(self, idx): ...",
+    "description": "抽象数据集基类，需实现 __len__ 和 __getitem__。",
+    "usage": "class CustomDataset(Dataset):\n    def __len__(self): return len(self.data)\n    def __getitem__(self, idx): return self.data[idx], self.labels[idx]",
+    "example": "from torch.utils.data import Dataset, DataLoader\n\nclass MyDataset(Dataset):\n    def __init__(self, data, labels):\n        self.data = data\n        self.labels = labels\n    def __len__(self): return len(self.data)\n    def __getitem__(self, idx): return self.data[idx], self.labels[idx]\n\nds = MyDataset(torch.randn(100, 3, 32, 32), torch.randint(0, 10, (100,)))\nloader = DataLoader(ds, batch_size=32, shuffle=True)",
+    "related": [
+      "DataLoader",
+      "TensorDataset",
+      "IterableDataset"
+    ],
+    "categories": [
+      "数据处理",
+      "数据集"
+    ],
+    "tips": "大数据集可考虑 IterableDataset 流式加载。"
+  },
+  {
+    "id": "torch.utils.data.TensorDataset",
+    "name": "TensorDataset",
+    "library": "PyTorch",
+    "module": "torch.utils.data",
+    "full_name": "TensorDataset",
+    "signature": "TensorDataset(*tensors)",
+    "description": "包装张量的数据集，第一维为样本维度。",
+    "usage": "dataset = TensorDataset(data_tensor, label_tensor)",
+    "example": "from torch.utils.data import DataLoader, TensorDataset\nx = torch.randn(1000, 10)\ny = torch.randint(0, 2, (1000,))\ndataset = TensorDataset(x, y)\nloader = DataLoader(dataset, batch_size=32, shuffle=True)",
+    "related": [
+      "Dataset",
+      "DataLoader"
+    ],
+    "categories": [
+      "数据处理",
+      "数据集"
+    ]
+  },
+  {
+    "id": "torchvision.transforms.ToTensor",
+    "name": "ToTensor",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.ToTensor",
+    "signature": "transforms.ToTensor()",
+    "description": "将 PIL Image 或 ndarray 转为 FloatTensor，值缩放到 [0,1]，形状变为 (C,H,W)。",
+    "usage": "transform = transforms.ToTensor()\ntensor = transform(pil_image)",
+    "example": "from torchvision import transforms\nfrom PIL import Image\nimg = Image.open('example.jpg')\ntransform = transforms.ToTensor()\ntensor = transform(img)\nprint(tensor.shape)",
+    "related": [
+      "transforms.ToPILImage",
+      "transforms.Normalize"
+    ],
+    "categories": [
+      "数据预处理",
+      "图像变换"
+    ],
+    "tips": "自动 HWC->CHW 格式转换(PyTorch 标准)。"
+  },
+  {
+    "id": "torchvision.transforms.Normalize",
+    "name": "Normalize",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.Normalize",
+    "signature": "transforms.Normalize(mean, std, inplace=False)",
+    "description": "用均值和标准差归一化张量图像：(input-mean)/std。",
+    "usage": "transform = transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])",
+    "example": "from torchvision import transforms\ntransform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])\nx = torch.rand(3, 224, 224)\ny = transform(x)",
+    "related": [
+      "transforms.ToTensor",
+      "transforms.Compose"
+    ],
+    "categories": [
+      "数据预处理",
+      "图像变换"
+    ],
+    "tips": "ImageNet 预训练标准参数；必须放在 ToTensor 之后。"
+  },
+  {
+    "id": "torchvision.transforms.Compose",
+    "name": "Compose",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.Compose",
+    "signature": "transforms.Compose(transforms)",
+    "description": "组合多个图像变换为流水线。",
+    "usage": "transform = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor(), transforms.Normalize(mean, std)])",
+    "example": "from torchvision import transforms\ntrain_transform = transforms.Compose([\n    transforms.RandomResizedCrop(224),\n    transforms.RandomHorizontalFlip(),\n    transforms.ToTensor(),\n    transforms.Normalize([0.485,0.456,0.406], [0.229,0.224,0.225])\n])",
+    "related": [
+      "transforms.ToTensor",
+      "transforms.Normalize",
+      "transforms.Resize"
+    ],
+    "categories": [
+      "数据预处理",
+      "图像变换"
+    ],
+    "tips": "训练和验证应使用不同的 transform（训练需要数据增强）。"
+  },
+  {
+    "id": "torchvision.transforms.Resize",
+    "name": "Resize",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.Resize",
+    "signature": "transforms.Resize(size, interpolation=BILINEAR, max_size=None, antialias=True)",
+    "description": "调整输入图像大小。",
+    "usage": "transform = transforms.Resize((224, 224))",
+    "example": "from torchvision import transforms\nfrom PIL import Image\nimg = Image.new('RGB', (300, 200))\nt = transforms.Resize((224, 224))\nresized = t(img)\nprint(resized.size)",
+    "related": [
+      "transforms.CenterCrop",
+      "transforms.RandomResizedCrop"
+    ],
+    "categories": [
+      "数据预处理",
+      "图像变换"
+    ]
+  },
+  {
+    "id": "torchvision.transforms.RandomHorizontalFlip",
+    "name": "RandomHorizontalFlip",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.RandomHorizontalFlip",
+    "signature": "transforms.RandomHorizontalFlip(p=0.5)",
+    "description": "以概率 p 随机水平翻转图像。",
+    "usage": "transform = transforms.RandomHorizontalFlip(p=0.5)",
+    "related": [
+      "transforms.RandomVerticalFlip",
+      "transforms.RandomRotation"
+    ],
+    "categories": [
+      "数据预处理",
+      "数据增强"
+    ],
+    "tips": "基础数据增强，对几乎所有图像分类任务有益。"
+  },
+  {
+    "id": "torchvision.transforms.RandomResizedCrop",
+    "name": "RandomResizedCrop",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.RandomResizedCrop",
+    "signature": "transforms.RandomResizedCrop(size, scale=(0.08, 1.0), ratio=(0.75, 1.333), ...)",
+    "description": "随机裁切并缩放图像到指定大小。",
+    "usage": "transform = transforms.RandomResizedCrop(224)",
+    "related": [
+      "transforms.RandomCrop",
+      "transforms.Resize"
+    ],
+    "categories": [
+      "数据预处理",
+      "数据增强"
+    ],
+    "tips": "ImageNet 训练标准增强方式。"
+  },
+  {
+    "id": "torchvision.transforms.ColorJitter",
+    "name": "ColorJitter",
+    "library": "PyTorch",
+    "module": "torchvision.transforms",
+    "full_name": "transforms.ColorJitter",
+    "signature": "transforms.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0)",
+    "description": "随机改变亮度、对比度、饱和度和色调。",
+    "usage": "transform = transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)",
+    "related": [
+      "transforms.RandomHorizontalFlip",
+      "transforms.RandomRotation"
+    ],
+    "categories": [
+      "数据预处理",
+      "数据增强"
+    ]
+  },
+  {
+    "id": "torch.cuda.is_available",
+    "name": "is_available",
+    "library": "PyTorch",
+    "module": "torch.cuda",
+    "full_name": "torch.cuda.is_available",
+    "signature": "torch.cuda.is_available()",
+    "description": "返回 CUDA 是否可用。",
+    "usage": "device = 'cuda' if torch.cuda.is_available() else 'cpu'",
+    "example": "import torch\ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\nmodel = torch.nn.Linear(10, 2).to(device)",
+    "related": [
+      "torch.cuda.device_count",
+      "torch.device"
+    ],
+    "categories": [
+      "设备管理"
+    ]
+  },
+  {
+    "id": "torch.no_grad",
+    "name": "no_grad",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.no_grad",
+    "signature": "torch.no_grad()",
+    "description": "禁用梯度计算的上下文管理器，加速推理。",
+    "usage": "with torch.no_grad():\n    predictions = model(inputs)",
+    "example": "import torch\nmodel = torch.nn.Linear(10, 2)\nmodel.eval()\nwith torch.no_grad():\n    y = model(torch.randn(5, 10))\n    print(y)",
+    "related": [
+      "torch.enable_grad",
+      "torch.inference_mode",
+      "model.eval()"
+    ],
+    "categories": [
+      "自动求导"
+    ],
+    "tips": "推理时使用，减少内存消耗并加速。torch.inference_mode() 性能更优。"
+  },
+  {
+    "id": "torch.backward",
+    "name": "backward",
+    "library": "PyTorch",
+    "module": "Torch.Tensor",
+    "full_name": "Tensor.backward",
+    "signature": "Tensor.backward(gradient=None, retain_graph=False, create_graph=False)",
+    "description": "计算当前张量关于图叶节点的梯度。",
+    "usage": "loss.backward()\noptimizer.step()",
+    "example": "import torch\nx = torch.randn(3, requires_grad=True)\ny = x ** 2\ny.sum().backward()\nprint(x.grad)  # 2x",
+    "related": [
+      "torch.autograd.backward",
+      "optimizer.step",
+      "optimizer.zero_grad"
+    ],
+    "categories": [
+      "自动求导"
+    ],
+    "tips": "每次 backward 前需 zero_grad()，否则梯度累积。"
+  },
+  {
+    "id": "torch.manual_seed",
+    "name": "manual_seed",
+    "library": "PyTorch",
+    "module": "torch",
+    "full_name": "torch.manual_seed",
+    "signature": "torch.manual_seed(seed)",
+    "description": "设置随机种子以确保 CPU 结果可复现。",
+    "usage": "torch.manual_seed(42)",
+    "example": "import torch\ntorch.manual_seed(42)\nprint(torch.randn(3))",
+    "related": [
+      "torch.cuda.manual_seed",
+      "torch.cuda.manual_seed_all"
+    ],
+    "categories": [
+      "随机",
+      "工具函数"
+    ],
+    "tips": "配合 torch.backends.cudnn.deterministic=True 和 benchmark=False 确保完全可复现。"
+  },
+  {
+    "id": "numpy.array",
+    "name": "array",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.array",
+    "signature": "numpy.array(object, dtype=None, *, copy=True, order='K', subok=False, ndmin=0)",
+    "description": "创建一个数组。",
+    "usage": "arr = np.array([1, 2, 3])",
+    "example": "import numpy as np\narr = np.array([[1, 2, 3], [4, 5, 6]])\nprint(arr.shape)  # (2, 3)",
+    "related": [
+      "np.asarray",
+      "np.zeros",
+      "np.ones"
+    ],
+    "categories": [
+      "数组创建"
+    ],
+    "tips": "np.array 总是拷贝数据；若想引用用 np.asarray。"
+  },
+  {
+    "id": "numpy.zeros",
+    "name": "zeros",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.zeros",
+    "signature": "numpy.zeros(shape, dtype=float, order='C')",
+    "description": "返回全零数组。",
+    "usage": "z = np.zeros((3, 4))",
+    "example": "import numpy as np\nz = np.zeros((3, 4, 2))\nprint(z.shape)",
+    "related": [
+      "np.ones",
+      "np.empty",
+      "np.zeros_like"
+    ],
+    "categories": [
+      "数组创建"
+    ]
+  },
+  {
+    "id": "numpy.ones",
+    "name": "ones",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.ones",
+    "signature": "numpy.ones(shape, dtype=None, order='C')",
+    "description": "返回全1数组。",
+    "usage": "o = np.ones((2, 3))",
+    "example": "import numpy as np\no = np.ones((2, 3))\nprint(o)",
+    "related": [
+      "np.zeros",
+      "np.ones_like",
+      "np.full"
+    ],
+    "categories": [
+      "数组创建"
+    ]
+  },
+  {
+    "id": "numpy.arange",
+    "name": "arange",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.arange",
+    "signature": "numpy.arange([start,]stop,[step,]dtype=None)",
+    "description": "返回给定区间等间隔的值。",
+    "usage": "a = np.arange(0, 10, 2)",
+    "example": "import numpy as np\na = np.arange(0, 10, 2)\nprint(a)  # [0, 2, 4, 6, 8]",
+    "related": [
+      "np.linspace",
+      "np.logspace"
+    ],
+    "categories": [
+      "数组创建"
+    ]
+  },
+  {
+    "id": "numpy.linspace",
+    "name": "linspace",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.linspace",
+    "signature": "numpy.linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None)",
+    "description": "返回区间等间隔的数字。",
+    "usage": "x = np.linspace(0, 2*np.pi, 100)",
+    "example": "import numpy as np\nx = np.linspace(0, np.pi, 5)\nprint(x)",
+    "related": [
+      "np.arange",
+      "np.logspace"
+    ],
+    "categories": [
+      "数组创建"
+    ]
+  },
+  {
+    "id": "numpy.eye",
+    "name": "eye",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.eye",
+    "signature": "numpy.eye(N, M=None, k=0, dtype=float, order='C')",
+    "description": "返回对角线为 1 的二维数组(单位矩阵)。",
+    "usage": "I = np.eye(3)",
+    "example": "import numpy as np\nI = np.eye(4)\nprint(I)",
+    "related": [
+      "np.identity",
+      "np.diag"
+    ],
+    "categories": [
+      "数组创建"
+    ]
+  },
+  {
+    "id": "numpy.full",
+    "name": "full",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.full",
+    "signature": "numpy.full(shape, fill_value, dtype=None, order='C')",
+    "description": "返回填充为指定值的数组。",
+    "usage": "f = np.full((3, 3), 3.14)",
+    "example": "import numpy as np\nf = np.full((2, 4), -1)\nprint(f)",
+    "related": [
+      "np.zeros",
+      "np.ones"
+    ],
+    "categories": [
+      "数组创建"
+    ]
+  },
+  {
+    "id": "numpy.random.randn",
+    "name": "random.randn",
+    "library": "NumPy",
+    "module": "numpy.random",
+    "full_name": "np.random.randn",
+    "signature": "numpy.random.randn(d0, d1, ..., dn)",
+    "description": "从标准正态分布采样。",
+    "usage": "r = np.random.randn(3, 3)",
+    "example": "import numpy as np\nx = np.random.randn(3, 3)\nprint(x.mean())  # approx 0",
+    "related": [
+      "np.random.rand",
+      "np.random.normal",
+      "np.random.standard_normal"
+    ],
+    "categories": [
+      "随机数"
+    ],
+    "tips": "新版推荐 np.random.default_rng() 后使用 Generator API。"
+  },
+  {
+    "id": "numpy.random.rand",
+    "name": "random.rand",
+    "library": "NumPy",
+    "module": "numpy.random",
+    "full_name": "np.random.rand",
+    "signature": "numpy.random.rand(d0, d1, ..., dn)",
+    "description": "从 [0, 1) 均匀分布采样。",
+    "usage": "r = np.random.rand(3, 4)",
+    "example": "import numpy as np\nx = np.random.rand(3, 4)\nprint(x.min(), x.max())",
+    "related": [
+      "np.random.randn",
+      "np.random.random",
+      "np.random.uniform"
+    ],
+    "categories": [
+      "随机数"
+    ]
+  },
+  {
+    "id": "numpy.random.seed",
+    "name": "random.seed",
+    "library": "NumPy",
+    "module": "numpy.random",
+    "full_name": "np.random.seed",
+    "signature": "numpy.random.seed(seed)",
+    "description": "设置随机种子，确保可复现。",
+    "usage": "np.random.seed(42)",
+    "example": "import numpy as np\nnp.random.seed(42)\nx = np.random.randn(3)\nnp.random.seed(42)\ny = np.random.randn(3)\nprint(np.allclose(x, y))  # True",
+    "related": [
+      "np.random.RandomState",
+      "np.random.default_rng"
+    ],
+    "categories": [
+      "随机数"
+    ],
+    "tips": "新版推荐 rng = np.random.default_rng(seed)。"
+  },
+  {
+    "id": "numpy.random.randint",
+    "name": "random.randint",
+    "library": "NumPy",
+    "module": "numpy.random",
+    "full_name": "np.random.randint",
+    "signature": "numpy.random.randint(low, high=None, size=None, dtype=int)",
+    "description": "返回 [low, high) 之间的随机整数。",
+    "usage": "r = np.random.randint(0, 10, size=(3, 4))",
+    "example": "import numpy as np\nlabels = np.random.randint(0, 10, size=(100,))\nprint(labels)",
+    "related": [
+      "np.random.randn",
+      "np.random.choice"
+    ],
+    "categories": [
+      "随机数"
+    ]
+  },
+  {
+    "id": "numpy.reshape",
+    "name": "reshape",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.reshape",
+    "signature": "numpy.reshape(a, newshape, order='C')",
+    "description": "不改变数据的情况下给数组新形状。",
+    "usage": "b = np.reshape(a, (2, 8))",
+    "example": "import numpy as np\na = np.arange(16)\nb = np.reshape(a, (4, 4))\nprint(b)",
+    "related": [
+      "ndarray.reshape",
+      "ndarray.flatten",
+      "np.ravel"
+    ],
+    "categories": [
+      "数组操作",
+      "形状变换"
+    ]
+  },
+  {
+    "id": "numpy.concatenate",
+    "name": "concatenate",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.concatenate",
+    "signature": "numpy.concatenate((a1, a2, ...), axis=0, out=None)",
+    "description": "沿现有轴连接数组序列。",
+    "usage": "result = np.concatenate([a, b], axis=0)",
+    "example": "import numpy as np\na = np.array([[1, 2], [3, 4]])\nb = np.array([[5, 6]])\nresult = np.concatenate([a, b], axis=0)\nprint(result)",
+    "related": [
+      "np.stack",
+      "np.hstack",
+      "np.vstack",
+      "np.block"
+    ],
+    "categories": [
+      "数组操作",
+      "拼接"
+    ]
+  },
+  {
+    "id": "numpy.stack",
+    "name": "stack",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.stack",
+    "signature": "numpy.stack(arrays, axis=0, out=None)",
+    "description": "沿新轴连接数组序列。",
+    "usage": "result = np.stack([a, b, c], axis=0)",
+    "example": "import numpy as np\na = np.array([1, 2, 3])\nb = np.array([4, 5, 6])\nresult = np.stack([a, b], axis=0)\nprint(result.shape)  # (2, 3)",
+    "related": [
+      "np.concatenate",
+      "np.hstack",
+      "np.vstack"
+    ],
+    "categories": [
+      "数组操作",
+      "拼接"
+    ]
+  },
+  {
+    "id": "numpy.transpose",
+    "name": "transpose",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.transpose",
+    "signature": "numpy.transpose(a, axes=None)",
+    "description": "反转或置换数组的轴。",
+    "usage": "b = np.transpose(a, (1, 0, 2))",
+    "example": "import numpy as np\na = np.arange(24).reshape(2, 3, 4)\nb = np.transpose(a, (1, 0, 2))\nprint(b.shape)  # (3, 2, 4)",
+    "related": [
+      "ndarray.T",
+      "np.moveaxis",
+      "np.swapaxes"
+    ],
+    "categories": [
+      "数组操作"
+    ]
+  },
+  {
+    "id": "numpy.expand_dims",
+    "name": "expand_dims",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.expand_dims",
+    "signature": "numpy.expand_dims(a, axis)",
+    "description": "在指定位置插入新轴。",
+    "usage": "b = np.expand_dims(a, axis=0)",
+    "example": "import numpy as np\na = np.array([1, 2, 3])\nb = np.expand_dims(a, axis=0)\nprint(b.shape)  # (1, 3)",
+    "related": [
+      "np.squeeze",
+      "np.reshape"
+    ],
+    "categories": [
+      "数组操作",
+      "形状变换"
+    ]
+  },
+  {
+    "id": "numpy.squeeze",
+    "name": "squeeze",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.squeeze",
+    "signature": "numpy.squeeze(a, axis=None)",
+    "description": "移除长度为 1 的轴。",
+    "usage": "b = np.squeeze(a)",
+    "example": "import numpy as np\na = np.array([[[1, 2, 3]]])\nb = np.squeeze(a)\nprint(b.shape)  # (3,)",
+    "related": [
+      "np.expand_dims",
+      "np.reshape"
+    ],
+    "categories": [
+      "数组操作",
+      "形状变换"
+    ]
+  },
+  {
+    "id": "numpy.sum",
+    "name": "sum",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.sum",
+    "signature": "numpy.sum(a, axis=None, dtype=None, out=None, keepdims=False)",
+    "description": "沿指定轴求和。",
+    "usage": "total = np.sum(arr, axis=0)",
+    "example": "import numpy as np\na = np.array([[1, 2], [3, 4]])\nprint(np.sum(a))          # 10\nprint(np.sum(a, axis=0))  # [4, 6]",
+    "related": [
+      "np.mean",
+      "np.std"
+    ],
+    "categories": [
+      "数学运算",
+      "归约操作"
+    ]
+  },
+  {
+    "id": "numpy.mean",
+    "name": "mean",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.mean",
+    "signature": "numpy.mean(a, axis=None, dtype=None, out=None, keepdims=False)",
+    "description": "沿指定轴计算平均值。",
+    "usage": "avg = np.mean(arr, axis=0)",
+    "example": "import numpy as np\na = np.array([[1, 2], [3, 4]])\nprint(np.mean(a, axis=1))  # [1.5, 3.5]",
+    "related": [
+      "np.average",
+      "np.std",
+      "np.var"
+    ],
+    "categories": [
+      "数学运算",
+      "归约操作"
+    ]
+  },
+  {
+    "id": "numpy.max",
+    "name": "max",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.max",
+    "signature": "numpy.max(a, axis=None, out=None, keepdims=False)",
+    "description": "返回数组的最大值或沿轴最大值。",
+    "usage": "m = np.max(arr, axis=0)",
+    "example": "import numpy as np\na = np.array([[1, 5], [3, 2]])\nprint(np.max(a, axis=1))  # [5, 3]",
+    "related": [
+      "np.min",
+      "np.argmax",
+      "np.amax"
+    ],
+    "categories": [
+      "数学运算",
+      "归约操作"
+    ]
+  },
+  {
+    "id": "numpy.argmax",
+    "name": "argmax",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.argmax",
+    "signature": "numpy.argmax(a, axis=None, out=None, keepdims=False)",
+    "description": "返回沿轴最大值的索引。",
+    "usage": "idx = np.argmax(arr, axis=1)",
+    "example": "import numpy as np\na = np.array([[1, 5, 3], [4, 2, 6]])\nprint(np.argmax(a, axis=1))  # [1, 2]",
+    "related": [
+      "np.argmin",
+      "np.max",
+      "np.argsort"
+    ],
+    "categories": [
+      "数学运算",
+      "索引"
+    ]
+  },
+  {
+    "id": "numpy.dot",
+    "name": "dot",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.dot",
+    "signature": "numpy.dot(a, b, out=None)",
+    "description": "两个数组的点积。",
+    "usage": "result = np.dot(A, B)",
+    "example": "import numpy as np\na = np.array([[1, 2], [3, 4]])\nb = np.array([[5, 6], [7, 8]])\nprint(np.dot(a, b))",
+    "related": [
+      "np.matmul",
+      "@ 运算符",
+      "np.inner"
+    ],
+    "categories": [
+      "数学运算",
+      "线性代数"
+    ]
+  },
+  {
+    "id": "numpy.matmul",
+    "name": "matmul",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.matmul",
+    "signature": "numpy.matmul(a, b, /, out=None, ...)",
+    "description": "矩阵乘积，支持批量运算。",
+    "usage": "result = np.matmul(A, B)",
+    "example": "import numpy as np\na = np.random.randn(10, 3, 4)\nb = np.random.randn(10, 4, 5)\nc = np.matmul(a, b)\nprint(c.shape)  # (10, 3, 5)",
+    "related": [
+      "np.dot",
+      "@ 运算符"
+    ],
+    "categories": [
+      "数学运算",
+      "线性代数"
+    ]
+  },
+  {
+    "id": "numpy.where",
+    "name": "where",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.where",
+    "signature": "numpy.where(condition, [x, y])",
+    "description": "根据条件从 x 或 y 选择元素。",
+    "usage": "result = np.where(condition, x, y)",
+    "example": "import numpy as np\na = np.array([1, 2, 3, 4, 5])\nresult = np.where(a > 3, a, 0)\nprint(result)  # [0, 0, 0, 4, 5]",
+    "related": [
+      "np.nonzero",
+      "np.argwhere",
+      "np.select"
+    ],
+    "categories": [
+      "条件操作"
+    ]
+  },
+  {
+    "id": "numpy.clip",
+    "name": "clip",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.clip",
+    "signature": "numpy.clip(a, a_min, a_max, out=None)",
+    "description": "限制数组值在 [a_min, a_max] 范围内。",
+    "usage": "b = np.clip(a, 0, 255)",
+    "example": "import numpy as np\na = np.array([-1, 5, 10, 20])\nb = np.clip(a, 0, 15)\nprint(b)  # [0, 5, 10, 15]",
+    "related": [
+      "np.minimum",
+      "np.maximum"
+    ],
+    "categories": [
+      "数组操作"
+    ]
+  },
+  {
+    "id": "numpy.unique",
+    "name": "unique",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.unique",
+    "signature": "numpy.unique(ar, return_index=False, return_inverse=False, return_counts=False)",
+    "description": "返回唯一元素。",
+    "usage": "uniques = np.unique(arr)",
+    "example": "import numpy as np\na = np.array([1, 1, 2, 3, 3, 4, 2])\nuniques, counts = np.unique(a, return_counts=True)\nprint(uniques, counts)",
+    "related": [
+      "np.bincount"
+    ],
+    "categories": [
+      "数组操作",
+      "集合操作"
+    ]
+  },
+  {
+    "id": "numpy.save",
+    "name": "save",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.save",
+    "signature": "numpy.save(file, arr, allow_pickle=True)",
+    "description": "保存数组为 .npy 二进制文件。",
+    "usage": "np.save('array.npy', arr)",
+    "example": "import numpy as np\na = np.random.randn(100, 100)\nnp.save('my_array.npy', a)\nb = np.load('my_array.npy')",
+    "related": [
+      "np.load",
+      "np.savez",
+      "np.savetxt"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "numpy.load",
+    "name": "load",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.load",
+    "signature": "numpy.load(file, mmap_mode=None, allow_pickle=False, ...)",
+    "description": "加载 .npy/.npz 文件。",
+    "usage": "arr = np.load('array.npy')",
+    "example": "import numpy as np\ndata = np.load('my_array.npy')\nprint(data.shape)",
+    "related": [
+      "np.save",
+      "np.savez"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "numpy.meshgrid",
+    "name": "meshgrid",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.meshgrid",
+    "signature": "numpy.meshgrid(*xi, copy=True, sparse=False, indexing='xy')",
+    "description": "返回坐标矩阵，用于创建网格点。",
+    "usage": "X, Y = np.meshgrid(x, y)",
+    "example": "import numpy as np\nx = np.linspace(-5, 5, 100)\ny = np.linspace(-5, 5, 100)\nX, Y = np.meshgrid(x, y)\nZ = np.sin(np.sqrt(X**2 + Y**2))",
+    "related": [
+      "np.mgrid",
+      "np.ogrid"
+    ],
+    "categories": [
+      "数组创建",
+      "网格"
+    ]
+  },
+  {
+    "id": "numpy.argsort",
+    "name": "argsort",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.argsort",
+    "signature": "numpy.argsort(a, axis=-1, kind=None, order=None)",
+    "description": "返回沿指定轴排序的索引。",
+    "usage": "indices = np.argsort(arr)",
+    "example": "import numpy as np\na = np.array([30, 10, 20])\nindices = np.argsort(a)\nprint(a[indices])  # [10, 20, 30]",
+    "related": [
+      "np.sort",
+      "np.argpartition"
+    ],
+    "categories": [
+      "排序"
+    ]
+  },
+  {
+    "id": "numpy.flatten",
+    "name": "flatten",
+    "library": "NumPy",
+    "module": "numpy",
+    "full_name": "np.ndarray.flatten",
+    "signature": "ndarray.flatten(order='C')",
+    "description": "将多维数组展平为一维数组(返回拷贝)。",
+    "usage": "flat = arr.flatten()",
+    "example": "import numpy as np\narr = np.array([[1, 2], [3, 4]])\nflat = arr.flatten()\nprint(flat)  # [1, 2, 3, 4]",
+    "related": [
+      "np.ravel",
+      "np.reshape"
+    ],
+    "categories": [
+      "数组操作",
+      "形状变换"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.figure",
+    "name": "figure",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.figure",
+    "signature": "plt.figure(num=None, figsize=None, dpi=None, facecolor=None, ...)",
+    "description": "创建新图形窗口。",
+    "params": [
+      {
+        "name": "figsize",
+        "type": "(w, h)",
+        "desc": "宽度和高度(英寸)"
+      },
+      {
+        "name": "dpi",
+        "type": "float",
+        "desc": "分辨率"
+      }
+    ],
+    "usage": "plt.figure(figsize=(10, 6), dpi=100)\nplt.plot(x, y)",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nplt.figure(figsize=(12, 4))\nx = np.linspace(0, 10, 100)\nplt.plot(x, np.sin(x))\nplt.show()",
+    "related": [
+      "plt.subplots",
+      "plt.gcf",
+      "plt.close"
+    ],
+    "categories": [
+      "图创建"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.subplots",
+    "name": "subplots",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.subplots",
+    "signature": "plt.subplots(nrows=1, ncols=1, *, sharex=False, sharey=False, figsize=None, ...)",
+    "description": "创建包含子图网格的图形。",
+    "params": [
+      {
+        "name": "nrows",
+        "type": "int",
+        "desc": "子图行数"
+      },
+      {
+        "name": "ncols",
+        "type": "int",
+        "desc": "子图列数"
+      },
+      {
+        "name": "figsize",
+        "type": "tuple",
+        "desc": "图形尺寸"
+      }
+    ],
+    "returns": {
+      "type": "(Figure, Axes)",
+      "desc": "图形和轴对象"
+    },
+    "usage": "fig, axes = plt.subplots(2, 2, figsize=(10, 8))\naxes[0, 0].plot(x, y)",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nfig, axes = plt.subplots(2, 2, figsize=(10, 8))\nx = np.linspace(0, 10, 100)\naxes[0, 0].plot(x, np.sin(x))\naxes[0, 0].set_title('sin(x)')\nplt.tight_layout()\nplt.show()",
+    "related": [
+      "plt.figure",
+      "plt.subplot"
+    ],
+    "categories": [
+      "图创建",
+      "子图"
+    ],
+    "tips": "推荐使用 subplots 而非 figure+add_subplot。"
+  },
+  {
+    "id": "matplotlib.pyplot.plot",
+    "name": "plot",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.plot",
+    "signature": "plt.plot(*args, scalex=True, scaley=True, data=None, **kwargs)",
+    "description": "绘制 x 相对 y 的折线图。",
+    "params": [
+      {
+        "name": "x, y",
+        "type": "array-like"
+      },
+      {
+        "name": "fmt",
+        "type": "str",
+        "desc": "格式字符串: 'r--'(红色虚线), 'bo'(蓝色圆点)"
+      }
+    ],
+    "usage": "plt.plot(x, y, 'b--', label='line')\nplt.legend()",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nx = np.linspace(0, 10, 100)\nplt.plot(x, np.sin(x), 'b-', label='sin(x)', linewidth=2)\nplt.plot(x, np.cos(x), 'r--', label='cos(x)', linewidth=2)\nplt.legend()\nplt.grid(True, alpha=0.3)\nplt.show()",
+    "related": [
+      "plt.scatter",
+      "plt.bar",
+      "plt.hist"
+    ],
+    "categories": [
+      "绘图",
+      "折线图"
+    ],
+    "tips": "格式字符串: 颜色(b,r,g)+线型(-,--,:)+标记(o,s,^)。"
+  },
+  {
+    "id": "matplotlib.pyplot.scatter",
+    "name": "scatter",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.scatter",
+    "signature": "plt.scatter(x, y, s=None, c=None, marker=None, cmap=None, alpha=None, ...)",
+    "description": "绘制散点图。",
+    "params": [
+      {
+        "name": "x, y",
+        "type": "array-like"
+      },
+      {
+        "name": "s",
+        "type": "float/array",
+        "desc": "标记大小"
+      },
+      {
+        "name": "c",
+        "type": "color/array",
+        "desc": "标记颜色"
+      },
+      {
+        "name": "cmap",
+        "type": "str",
+        "desc": "颜色映射"
+      }
+    ],
+    "usage": "plt.scatter(x, y, c=labels, cmap='viridis', s=50)",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nN = 50\nx = np.random.randn(N)\ny = np.random.randn(N)\ncolors = np.random.randn(N)\nplt.scatter(x, y, c=colors, s=100, alpha=0.6, cmap='coolwarm')\nplt.colorbar()\nplt.show()",
+    "related": [
+      "plt.plot",
+      "plt.hist",
+      "plt.imshow"
+    ],
+    "categories": [
+      "绘图",
+      "散点图"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.bar",
+    "name": "bar",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.bar",
+    "signature": "plt.bar(x, height, width=0.8, bottom=None, color=None, ...)",
+    "description": "绘制柱状图。",
+    "usage": "plt.bar(categories, values, color='steelblue')",
+    "example": "import matplotlib.pyplot as plt\ncategories = ['A', 'B', 'C', 'D', 'E']\nvalues = [23, 45, 56, 78, 32]\nplt.bar(categories, values, color='steelblue', edgecolor='black')\nplt.show()",
+    "related": [
+      "plt.barh",
+      "plt.hist",
+      "plt.stem"
+    ],
+    "categories": [
+      "绘图",
+      "柱状图"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.hist",
+    "name": "hist",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.hist",
+    "signature": "plt.hist(x, bins=None, range=None, density=False, cumulative=False, color=None, ...)",
+    "description": "绘制直方图。",
+    "params": [
+      {
+        "name": "x",
+        "type": "array"
+      },
+      {
+        "name": "bins",
+        "type": "int/sequence",
+        "desc": "柱子数量或边界"
+      },
+      {
+        "name": "density",
+        "type": "bool",
+        "desc": "若True，绘制概率密度"
+      }
+    ],
+    "usage": "plt.hist(data, bins=50, density=True, alpha=0.7)",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\ndata = np.random.randn(10000)\nplt.hist(data, bins=50, density=True, alpha=0.7, color='skyblue')\nplt.show()",
+    "related": [
+      "plt.bar",
+      "np.histogram",
+      "plt.hist2d"
+    ],
+    "categories": [
+      "绘图",
+      "直方图"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.imshow",
+    "name": "imshow",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.imshow",
+    "signature": "plt.imshow(X, cmap=None, norm=None, aspect=None, interpolation=None, alpha=None, ...)",
+    "description": "将数据显示为图像。",
+    "params": [
+      {
+        "name": "X",
+        "type": "array",
+        "desc": "(M,N)灰度/(M,N,3)RGB/(M,N,4)RGBA"
+      },
+      {
+        "name": "cmap",
+        "type": "str",
+        "desc": "颜色映射: 'gray','viridis','jet'"
+      }
+    ],
+    "usage": "plt.imshow(image, cmap='gray')\nplt.colorbar()",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nimg = np.random.randn(100, 100)\nplt.imshow(img, cmap='gray')\nplt.colorbar()\nplt.axis('off')\nplt.show()",
+    "related": [
+      "plt.colorbar",
+      "plt.matshow"
+    ],
+    "categories": [
+      "绘图",
+      "图像显示"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.title",
+    "name": "title",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.title",
+    "signature": "plt.title(label, fontdict=None, loc='center', pad=None, fontsize=None, ...)",
+    "description": "设置当前坐标轴标题。",
+    "usage": "plt.title('My Plot', fontsize=16, fontweight='bold')",
+    "example": "import matplotlib.pyplot as plt\nplt.plot([1, 2, 3], [1, 4, 9])\nplt.title('Quadratic Function', fontsize=14, fontweight='bold')\nplt.show()",
+    "related": [
+      "plt.xlabel",
+      "plt.ylabel",
+      "plt.suptitle"
+    ],
+    "categories": [
+      "标签与样式"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.xlabel",
+    "name": "xlabel / ylabel",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.xlabel / plt.ylabel",
+    "signature": "plt.xlabel(xlabel, labelpad=None, **kwargs)\nplt.ylabel(ylabel, labelpad=None, **kwargs)",
+    "description": "设置 x 轴或 y 轴标签。",
+    "usage": "plt.xlabel('X Axis', fontsize=12)\nplt.ylabel('Y Axis', fontsize=12)",
+    "example": "plt.plot([1, 2, 3], [1, 4, 9])\nplt.xlabel('Input Size')\nplt.ylabel('Output Value')\nplt.show()",
+    "related": [
+      "plt.title",
+      "ax.set_xlabel"
+    ],
+    "categories": [
+      "标签与样式"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.legend",
+    "name": "legend",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.legend",
+    "signature": "plt.legend(*args, loc='best', fontsize=None, frameon=True, ...)",
+    "description": "在坐标轴上放置图例。",
+    "usage": "plt.plot(x, y, label='line')\nplt.legend()",
+    "example": "import matplotlib.pyplot as plt\nplt.plot([1,2,3], [1,2,3], label='linear')\nplt.plot([1,2,3], [1,4,9], label='quadratic')\nplt.legend(loc='upper left', fontsize=10)\nplt.show()",
+    "related": [
+      "plt.plot",
+      "ax.legend"
+    ],
+    "categories": [
+      "标签与样式"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.colorbar",
+    "name": "colorbar",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.colorbar",
+    "signature": "plt.colorbar(mappable=None, cax=None, ax=None, label=None, ...)",
+    "description": "添加颜色条(color bar)。",
+    "usage": "im = plt.imshow(data, cmap='viridis')\nplt.colorbar(im, label='Value')",
+    "example": "import matplotlib.pyplot as plt\nimport numpy as np\nim = plt.imshow(np.random.rand(10, 10), cmap='viridis')\nplt.colorbar(im, label='Intensity')\nplt.show()",
+    "related": [
+      "plt.imshow",
+      "plt.scatter"
+    ],
+    "categories": [
+      "绘图辅助"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.grid",
+    "name": "grid",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.grid",
+    "signature": "plt.grid(b=None, which='major', axis='both', **kwargs)",
+    "description": "设置是否显示网格线。",
+    "usage": "plt.grid(True, alpha=0.3, linestyle='--')",
+    "example": "import matplotlib.pyplot as plt\nplt.plot([1, 2, 3], [1, 4, 9])\nplt.grid(True, alpha=0.3)\nplt.show()",
+    "related": [
+      "plt.plot",
+      "ax.grid"
+    ],
+    "categories": [
+      "绘图辅助"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.xlim",
+    "name": "xlim / ylim",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.xlim / plt.ylim",
+    "signature": "plt.xlim(left=None, right=None)\nplt.ylim(bottom=None, top=None)",
+    "description": "获取或设置 x/y 轴范围。",
+    "usage": "plt.xlim(0, 10)\nplt.ylim(-1, 1)",
+    "example": "import matplotlib.pyplot as plt\nplt.plot([1, 2, 3], [1, 4, 9])\nplt.xlim(0, 4)\nplt.ylim(0, 10)\nplt.show()",
+    "related": [
+      "ax.set_xlim",
+      "ax.set_ylim"
+    ],
+    "categories": [
+      "标签与样式"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.savefig",
+    "name": "savefig",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.savefig",
+    "signature": "plt.savefig(fname, dpi=None, bbox_inches=None, pad_inches=0.1, ...)",
+    "description": "保存当前图形到文件。",
+    "usage": "plt.savefig('output.png', dpi=300, bbox_inches='tight')",
+    "example": "import matplotlib.pyplot as plt\nplt.plot([1, 2, 3], [1, 4, 9])\nplt.savefig('plot.png', dpi=150, bbox_inches='tight')",
+    "related": [
+      "plt.figure",
+      "plt.show"
+    ],
+    "categories": [
+      "I/O操作"
+    ],
+    "tips": "bbox_inches='tight' 可去除多余空白边距。"
+  },
+  {
+    "id": "matplotlib.pyplot.show",
+    "name": "show",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.show",
+    "signature": "plt.show(*args, **kwargs)",
+    "description": "显示所有打开的图形。",
+    "usage": "plt.show()",
+    "related": [
+      "plt.figure",
+      "plt.savefig"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.subplot",
+    "name": "subplot",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.subplot",
+    "signature": "plt.subplot(*args, **kwargs)",
+    "description": "在当前图形上添加子图。",
+    "usage": "plt.subplot(2, 2, 1)\nplt.plot(x, y)",
+    "related": [
+      "plt.subplots",
+      "plt.figure"
+    ],
+    "categories": [
+      "图创建",
+      "子图"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.errorbar",
+    "name": "errorbar",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.errorbar",
+    "signature": "plt.errorbar(x, y, yerr=None, xerr=None, fmt='', ...)",
+    "description": "绘制带有误差棒的折线图。",
+    "usage": "plt.errorbar(x, y, yerr=std, fmt='o', capsize=3)",
+    "related": [
+      "plt.plot",
+      "plt.scatter"
+    ],
+    "categories": [
+      "绘图"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.fill_between",
+    "name": "fill_between",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.fill_between",
+    "signature": "plt.fill_between(x, y1, y2=0, where=None, alpha=None, ...)",
+    "description": "填充两条曲线之间的区域。",
+    "usage": "plt.fill_between(x, y - std, y + std, alpha=0.3)",
+    "related": [
+      "plt.plot",
+      "plt.errorbar"
+    ],
+    "categories": [
+      "绘图"
+    ],
+    "tips": "常用于显示置信区间或标准差范围。"
+  },
+  {
+    "id": "matplotlib.pyplot.imread",
+    "name": "imread",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.imread",
+    "signature": "plt.imread(fname, format=None)",
+    "description": "将图像文件读取为数组。",
+    "usage": "img = plt.imread('image.png')",
+    "example": "import matplotlib.pyplot as plt\nimg = plt.imread('photo.png')\nprint(img.shape)\nplt.imshow(img)\nplt.show()",
+    "related": [
+      "plt.imshow",
+      "plt.imsave"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.imsave",
+    "name": "imsave",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.imsave",
+    "signature": "plt.imsave(fname, arr, **kwargs)",
+    "description": "将数组保存为图像文件。",
+    "usage": "plt.imsave('output.png', image_array, cmap='gray')",
+    "related": [
+      "plt.imread",
+      "plt.imshow"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.subplots_adjust",
+    "name": "subplots_adjust",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.subplots_adjust",
+    "signature": "plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)",
+    "description": "调整子图之间的间距和边距。",
+    "usage": "plt.subplots_adjust(wspace=0.3, hspace=0.4)\nplt.tight_layout()",
+    "related": [
+      "plt.tight_layout",
+      "fig.subplots_adjust"
+    ],
+    "categories": [
+      "图创建",
+      "子图"
+    ]
+  },
+  {
+    "id": "matplotlib.pyplot.tight_layout",
+    "name": "tight_layout",
+    "library": "Matplotlib",
+    "module": "matplotlib.pyplot",
+    "full_name": "plt.tight_layout",
+    "signature": "plt.tight_layout(pad=1.08, h_pad=None, w_pad=None, rect=None)",
+    "description": "自动调整子图参数，使子图适配图形区域。",
+    "usage": "plt.tight_layout()",
+    "related": [
+      "plt.subplots_adjust"
+    ],
+    "categories": [
+      "图创建",
+      "子图"
+    ],
+    "tips": "在 show() 或 savefig() 前调用。"
+  },
+  {
+    "id": "opencv.imread",
+    "name": "imread",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.imread",
+    "signature": "cv2.imread(filename, flags=cv2.IMREAD_COLOR)",
+    "description": "从文件加载图像。",
+    "params": [
+      {
+        "name": "filename",
+        "type": "str",
+        "desc": "图像文件路径"
+      },
+      {
+        "name": "flags",
+        "type": "int",
+        "desc": "cv2.IMREAD_COLOR(默认), IMREAD_GRAYSCALE, IMREAD_UNCHANGED"
+      }
+    ],
+    "returns": {
+      "type": "ndarray",
+      "desc": "形状为 (H, W, 3) 的 BGR 图像数组"
+    },
+    "usage": "img = cv2.imread('image.jpg')\ngray = cv2.imread('image.jpg', cv2.IMREAD_GRAYSCALE)",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\nprint(img.shape)  # (height, width, 3)\ngray = cv2.imread('photo.jpg', cv2.IMREAD_GRAYSCALE)\nprint(gray.shape)  # (height, width)",
+    "related": [
+      "cv2.imwrite",
+      "cv2.imshow",
+      "cv2.imdecode"
+    ],
+    "categories": [
+      "I/O操作"
+    ],
+    "tips": "OpenCV 读取为 BGR 格式（非 RGB）；与 matplotlib 配合需转换。"
+  },
+  {
+    "id": "opencv.imwrite",
+    "name": "imwrite",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.imwrite",
+    "signature": "cv2.imwrite(filename, img, params=None)",
+    "description": "将图像保存到文件。",
+    "params": [
+      {
+        "name": "filename",
+        "type": "str",
+        "desc": "保存路径"
+      },
+      {
+        "name": "img",
+        "type": "ndarray",
+        "desc": "要保存的图像"
+      }
+    ],
+    "usage": "cv2.imwrite('output.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 95])",
+    "example": "import cv2\nimg = cv2.imread('input.jpg')\ncv2.imwrite('output.png', img)",
+    "related": [
+      "cv2.imread",
+      "cv2.imshow"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "opencv.imshow",
+    "name": "imshow",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.imshow",
+    "signature": "cv2.imshow(winname, mat)",
+    "description": "在窗口中显示图像。",
+    "usage": "cv2.imshow('Window Name', img)\ncv2.waitKey(0)\ncv2.destroyAllWindows()",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\ncv2.imshow('My Image', img)\ncv2.waitKey(0)\ncv2.destroyAllWindows()",
+    "related": [
+      "cv2.imread",
+      "cv2.namedWindow",
+      "cv2.waitKey"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "opencv.cvtColor",
+    "name": "cvtColor",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.cvtColor",
+    "signature": "cv2.cvtColor(src, code, dst=None, dstCn=0)",
+    "description": "将图像从一种颜色空间转换到另一种。",
+    "params": [
+      {
+        "name": "src",
+        "type": "ndarray",
+        "desc": "输入图像"
+      },
+      {
+        "name": "code",
+        "type": "int",
+        "desc": "转换代码: cv2.COLOR_BGR2GRAY, COLOR_BGR2RGB, COLOR_BGR2HSV"
+      }
+    ],
+    "usage": "gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\nrgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\ngray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\nrgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)\nhsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)",
+    "related": [
+      "cv2.imread",
+      "cv2.threshold"
+    ],
+    "categories": [
+      "图像处理",
+      "颜色空间"
+    ],
+    "tips": "COLOR_BGR2RGB 在与 matplotlib 配合时非常重要。"
+  },
+  {
+    "id": "opencv.resize",
+    "name": "resize",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.resize",
+    "signature": "cv2.resize(src, dsize, dst=None, fx=None, fy=None, interpolation=cv2.INTER_LINEAR)",
+    "description": "调整图像大小。",
+    "params": [
+      {
+        "name": "dsize",
+        "type": "tuple",
+        "desc": "目标大小 (width, height)"
+      },
+      {
+        "name": "fx, fy",
+        "type": "float",
+        "desc": "缩放因子"
+      },
+      {
+        "name": "interpolation",
+        "type": "int",
+        "desc": "INTER_LINEAR, INTER_CUBIC, INTER_NEAREST"
+      }
+    ],
+    "usage": "resized = cv2.resize(img, (224, 224))",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\nresized = cv2.resize(img, (224, 224), interpolation=cv2.INTER_CUBIC)\nprint(resized.shape)",
+    "related": [
+      "cv2.warpAffine",
+      "cv2.pyrDown",
+      "cv2.pyrUp"
+    ],
+    "categories": [
+      "图像处理",
+      "几何变换"
+    ]
+  },
+  {
+    "id": "opencv.GaussianBlur",
+    "name": "GaussianBlur",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.GaussianBlur",
+    "signature": "cv2.GaussianBlur(src, ksize, sigmaX, dst=None, sigmaY=0, ...)",
+    "description": "使用高斯核对图像进行模糊/平滑。",
+    "params": [
+      {
+        "name": "ksize",
+        "type": "tuple",
+        "desc": "核大小 (w, h), 必须为奇数"
+      },
+      {
+        "name": "sigmaX",
+        "type": "float",
+        "desc": "高斯核 X 方向标准差"
+      }
+    ],
+    "usage": "blurred = cv2.GaussianBlur(img, (5, 5), 0)",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\nblurred = cv2.GaussianBlur(img, (5, 5), 0)",
+    "related": [
+      "cv2.blur",
+      "cv2.medianBlur",
+      "cv2.bilateralFilter"
+    ],
+    "categories": [
+      "图像处理",
+      "滤波"
+    ],
+    "tips": "ksize 越大模糊越强；sigmaX=0 时自动从 ksize 计算。"
+  },
+  {
+    "id": "opencv.Canny",
+    "name": "Canny",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.Canny",
+    "signature": "cv2.Canny(image, threshold1, threshold2, edges=None, apertureSize=3, L2gradient=False)",
+    "description": "使用 Canny 算法进行边缘检测。",
+    "params": [
+      {
+        "name": "threshold1",
+        "type": "float",
+        "desc": "低阈值"
+      },
+      {
+        "name": "threshold2",
+        "type": "float",
+        "desc": "高阈值"
+      }
+    ],
+    "usage": "edges = cv2.Canny(img, 100, 200)",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg', cv2.IMREAD_GRAYSCALE)\nedges = cv2.Canny(img, 100, 200)\ncv2.imshow('Edges', edges)\ncv2.waitKey(0)",
+    "related": [
+      "cv2.Sobel",
+      "cv2.Laplacian",
+      "cv2.findContours"
+    ],
+    "categories": [
+      "图像处理",
+      "边缘检测"
+    ],
+    "tips": "threshold1:threshold2 常用 1:2 或 1:3 比例。"
+  },
+  {
+    "id": "opencv.threshold",
+    "name": "threshold",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.threshold",
+    "signature": "cv2.threshold(src, thresh, maxval, type, dst=None)",
+    "description": "对图像应用固定阈值处理。",
+    "params": [
+      {
+        "name": "thresh",
+        "type": "float",
+        "desc": "阈值"
+      },
+      {
+        "name": "maxval",
+        "type": "float",
+        "desc": "最大像素值"
+      },
+      {
+        "name": "type",
+        "type": "int",
+        "desc": "THRESH_BINARY, THRESH_BINARY_INV, THRESH_OTSU"
+      }
+    ],
+    "usage": "ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)",
+    "example": "import cv2\ngray = cv2.imread('photo.jpg', cv2.IMREAD_GRAYSCALE)\nret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)\nret, otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)",
+    "related": [
+      "cv2.adaptiveThreshold",
+      "cv2.inRange"
+    ],
+    "categories": [
+      "图像处理",
+      "二值化"
+    ]
+  },
+  {
+    "id": "opencv.rectangle",
+    "name": "rectangle",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.rectangle",
+    "signature": "cv2.rectangle(img, pt1, pt2, color, thickness=None, ...)",
+    "description": "在图像上绘制矩形。",
+    "usage": "cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\ncv2.rectangle(img, (50, 50), (200, 200), (0, 255, 0), 2)\ncv2.putText(img, 'Object', (50, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)",
+    "related": [
+      "cv2.circle",
+      "cv2.line",
+      "cv2.putText"
+    ],
+    "categories": [
+      "绘图"
+    ]
+  },
+  {
+    "id": "opencv.circle",
+    "name": "circle",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.circle",
+    "signature": "cv2.circle(img, center, radius, color, thickness=None, ...)",
+    "description": "在图像上绘制圆。",
+    "usage": "cv2.circle(img, (cx, cy), radius, (255, 0, 0), -1)",
+    "related": [
+      "cv2.rectangle",
+      "cv2.line"
+    ],
+    "categories": [
+      "绘图"
+    ]
+  },
+  {
+    "id": "opencv.line",
+    "name": "line",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.line",
+    "signature": "cv2.line(img, pt1, pt2, color, thickness=None, ...)",
+    "description": "在图像上绘制线段。",
+    "usage": "cv2.line(img, (0, 0), (100, 100), (255, 0, 0), 3)",
+    "related": [
+      "cv2.rectangle",
+      "cv2.circle"
+    ],
+    "categories": [
+      "绘图"
+    ]
+  },
+  {
+    "id": "opencv.putText",
+    "name": "putText",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.putText",
+    "signature": "cv2.putText(img, text, org, fontFace, fontScale, color, thickness=None, ...)",
+    "description": "在图像上绘制文字。",
+    "usage": "cv2.putText(img, 'Hello', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)",
+    "related": [
+      "cv2.rectangle",
+      "cv2.circle"
+    ],
+    "categories": [
+      "绘图"
+    ]
+  },
+  {
+    "id": "opencv.flip",
+    "name": "flip",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.flip",
+    "signature": "cv2.flip(src, flipCode, dst=None)",
+    "description": "翻转图像（水平/垂直/双向）。",
+    "params": [
+      {
+        "name": "flipCode",
+        "type": "int",
+        "desc": "0:垂直, 1:水平, -1:双向"
+      }
+    ],
+    "usage": "flipped = cv2.flip(img, 1)",
+    "related": [
+      "cv2.rotate",
+      "cv2.transpose"
+    ],
+    "categories": [
+      "图像处理",
+      "几何变换"
+    ]
+  },
+  {
+    "id": "opencv.warpAffine",
+    "name": "warpAffine",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.warpAffine",
+    "signature": "cv2.warpAffine(src, M, dsize, dst=None, flags=None, ...)",
+    "description": "对图像应用仿射变换。",
+    "usage": "M = cv2.getRotationMatrix2D((w/2, h/2), 45, 1.0)\nrotated = cv2.warpAffine(img, M, (w, h))",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg')\nh, w = img.shape[:2]\nM = cv2.getRotationMatrix2D((w//2, h//2), 45, 1.0)\nrotated = cv2.warpAffine(img, M, (w, h))",
+    "related": [
+      "cv2.warpPerspective",
+      "cv2.resize",
+      "cv2.getRotationMatrix2D"
+    ],
+    "categories": [
+      "图像处理",
+      "几何变换"
+    ]
+  },
+  {
+    "id": "opencv.findContours",
+    "name": "findContours",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.findContours",
+    "signature": "cv2.findContours(image, mode, method, contours=None, hierarchy=None, offset=None)",
+    "description": "在二值图像中查找轮廓。",
+    "params": [
+      {
+        "name": "mode",
+        "type": "int",
+        "desc": "RETR_EXTERNAL, RETR_TREE"
+      },
+      {
+        "name": "method",
+        "type": "int",
+        "desc": "CHAIN_APPROX_SIMPLE, CHAIN_APPROX_NONE"
+      }
+    ],
+    "usage": "contours, hierarchy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)",
+    "example": "import cv2\nimg = cv2.imread('photo.jpg', cv2.IMREAD_GRAYSCALE)\n_, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)\ncontours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\ncv2.drawContours(img_color, contours, -1, (0, 255, 0), 2)",
+    "related": [
+      "cv2.drawContours",
+      "cv2.Canny",
+      "cv2.threshold"
+    ],
+    "categories": [
+      "图像处理",
+      "轮廓"
+    ]
+  },
+  {
+    "id": "opencv.VideoCapture",
+    "name": "VideoCapture",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.VideoCapture",
+    "signature": "cv2.VideoCapture(index_or_filename, apiPreference=None)",
+    "description": "从摄像头或视频文件捕获视频。",
+    "usage": "cap = cv2.VideoCapture(0)\nret, frame = cap.read()",
+    "example": "import cv2\ncap = cv2.VideoCapture(0)\nwhile True:\n    ret, frame = cap.read()\n    if not ret: break\n    cv2.imshow('Webcam', frame)\n    if cv2.waitKey(1) & 0xFF == ord('q'): break\ncap.release()\ncv2.destroyAllWindows()",
+    "related": [
+      "cv2.VideoWriter",
+      "cv2.imshow"
+    ],
+    "categories": [
+      "视频"
+    ]
+  },
+  {
+    "id": "opencv.VideoWriter",
+    "name": "VideoWriter",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.VideoWriter",
+    "signature": "cv2.VideoWriter(filename, fourcc, fps, frameSize, isColor=True)",
+    "description": "创建 VideoWriter 对象以保存视频。",
+    "usage": "fourcc = cv2.VideoWriter_fourcc(*'XVID')\nout = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))",
+    "related": [
+      "cv2.VideoCapture"
+    ],
+    "categories": [
+      "视频"
+    ]
+  },
+  {
+    "id": "opencv.morphologyEx",
+    "name": "morphologyEx",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.morphologyEx",
+    "signature": "cv2.morphologyEx(src, op, kernel, dst=None, anchor=None, ...)",
+    "description": "形态学操作（膨胀、腐蚀、开运算、闭运算）。",
+    "params": [
+      {
+        "name": "op",
+        "type": "int",
+        "desc": "MORPH_OPEN, MORPH_CLOSE, MORPH_GRADIENT, MORPH_TOPHAT"
+      }
+    ],
+    "usage": "kernel = np.ones((5,5), np.uint8)\nopened = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)",
+    "related": [
+      "cv2.erode",
+      "cv2.dilate"
+    ],
+    "categories": [
+      "图像处理",
+      "形态学"
+    ]
+  },
+  {
+    "id": "opencv.bitwise_and",
+    "name": "bitwise_and",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.bitwise_and",
+    "signature": "cv2.bitwise_and(src1, src2, dst=None, mask=None)",
+    "description": "两个图像/数组的按位与运算。",
+    "usage": "masked = cv2.bitwise_and(img, img, mask=binary_mask)",
+    "related": [
+      "cv2.bitwise_or",
+      "cv2.bitwise_not",
+      "cv2.inRange"
+    ],
+    "categories": [
+      "图像处理",
+      "运算"
+    ],
+    "tips": "常用于掩膜操作：将 ROI 外区域置零。"
+  },
+  {
+    "id": "opencv.erode",
+    "name": "erode",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.erode",
+    "signature": "cv2.erode(src, kernel, dst=None, anchor=None, iterations=None, ...)",
+    "description": "腐蚀操作，消除小区域。",
+    "usage": "eroded = cv2.erode(binary, kernel, iterations=1)",
+    "related": [
+      "cv2.dilate",
+      "cv2.morphologyEx"
+    ],
+    "categories": [
+      "图像处理",
+      "形态学"
+    ]
+  },
+  {
+    "id": "opencv.dilate",
+    "name": "dilate",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.dilate",
+    "signature": "cv2.dilate(src, kernel, dst=None, anchor=None, iterations=None, ...)",
+    "description": "膨胀操作，扩大亮区域。",
+    "usage": "dilated = cv2.dilate(binary, kernel, iterations=1)",
+    "related": [
+      "cv2.erode",
+      "cv2.morphologyEx"
+    ],
+    "categories": [
+      "图像处理",
+      "形态学"
+    ]
+  },
+  {
+    "id": "opencv.waitKey",
+    "name": "waitKey",
+    "library": "OpenCV",
+    "module": "cv2",
+    "full_name": "cv2.waitKey",
+    "signature": "cv2.waitKey(delay=0)",
+    "description": "等待按键事件。返回按键的 ASCII 码。",
+    "usage": "key = cv2.waitKey(0)\nif key & 0xFF == ord('q'): break",
+    "related": [
+      "cv2.imshow",
+      "cv2.destroyAllWindows"
+    ],
+    "categories": [
+      "GUI"
+    ]
+  },
+  {
+    "id": "sklearn.model_selection.train_test_split",
+    "name": "train_test_split",
+    "library": "Scikit-learn",
+    "module": "sklearn.model_selection",
+    "full_name": "train_test_split",
+    "signature": "train_test_split(*arrays, test_size=None, train_size=None, random_state=None, shuffle=True, stratify=None)",
+    "description": "将数组或矩阵按随机比例分割为训练集和测试集。",
+    "params": [
+      {
+        "name": "*arrays",
+        "type": "array-like",
+        "desc": "输入数据"
+      },
+      {
+        "name": "test_size",
+        "type": "float/int",
+        "desc": "测试集比例或样本数"
+      },
+      {
+        "name": "random_state",
+        "type": "int",
+        "desc": "随机种子"
+      },
+      {
+        "name": "stratify",
+        "type": "array-like",
+        "desc": "按标签分层抽样"
+      }
+    ],
+    "usage": "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)",
+    "example": "from sklearn.model_selection import train_test_split\nimport numpy as np\nX = np.random.randn(1000, 10)\ny = np.random.randint(0, 2, 1000)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nprint(X_train.shape, X_test.shape)",
+    "related": [
+      "cross_val_score",
+      "GridSearchCV",
+      "KFold"
+    ],
+    "categories": [
+      "模型选择",
+      "数据划分"
+    ],
+    "tips": "stratify=y 确保训练和测试集中类别比例一致。"
+  },
+  {
+    "id": "sklearn.model_selection.cross_val_score",
+    "name": "cross_val_score",
+    "library": "Scikit-learn",
+    "module": "sklearn.model_selection",
+    "full_name": "cross_val_score",
+    "signature": "cross_val_score(estimator, X, y=None, *, scoring=None, cv=None, ...)",
+    "description": "使用交叉验证评估模型。",
+    "params": [
+      {
+        "name": "estimator",
+        "type": "estimator",
+        "desc": "要评估的模型"
+      },
+      {
+        "name": "X",
+        "type": "array-like",
+        "desc": "特征"
+      },
+      {
+        "name": "y",
+        "type": "array-like",
+        "desc": "标签"
+      },
+      {
+        "name": "cv",
+        "type": "int",
+        "desc": "折数，默认5"
+      }
+    ],
+    "usage": "scores = cross_val_score(model, X, y, cv=5)\nprint(f'Accuracy: {scores.mean():.2f} +/- {scores.std():.2f}')",
+    "example": "from sklearn.model_selection import cross_val_score\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.datasets import make_classification\nX, y = make_classification(n_samples=1000, n_features=20, random_state=42)\nclf = RandomForestClassifier()\nscores = cross_val_score(clf, X, y, cv=5)\nprint(f'Cross-validation accuracy: {scores.mean():.3f}')",
+    "related": [
+      "train_test_split",
+      "GridSearchCV",
+      "cross_validate"
+    ],
+    "categories": [
+      "模型选择",
+      "评估"
+    ]
+  },
+  {
+    "id": "sklearn.model_selection.GridSearchCV",
+    "name": "GridSearchCV",
+    "library": "Scikit-learn",
+    "module": "sklearn.model_selection",
+    "full_name": "GridSearchCV",
+    "signature": "GridSearchCV(estimator, param_grid, *, scoring=None, cv=None, verbose=0, ...)",
+    "description": "在指定参数网格上进行穷举搜索，找到最佳超参数。",
+    "params": [
+      {
+        "name": "estimator",
+        "type": "estimator"
+      },
+      {
+        "name": "param_grid",
+        "type": "dict",
+        "desc": "参数名到候选值列表的映射"
+      },
+      {
+        "name": "cv",
+        "type": "int",
+        "desc": "交叉验证折数"
+      }
+    ],
+    "usage": "params = {'C': [0.1, 1, 10], 'kernel': ['rbf', 'linear']}\ngrid = GridSearchCV(SVC(), params, cv=5)\ngrid.fit(X, y)\nprint(grid.best_params_)",
+    "example": "from sklearn.model_selection import GridSearchCV\nfrom sklearn.svm import SVC\nparam_grid = {'C': [0.1, 1, 10], 'gamma': [0.01, 0.1, 1]}\ngrid = GridSearchCV(SVC(), param_grid, cv=5)\ngrid.fit(X_train, y_train)\nprint(f'Best params: {grid.best_params_}')\nprint(f'Best score: {grid.best_score_:.3f}')",
+    "related": [
+      "RandomizedSearchCV",
+      "cross_val_score",
+      "cross_validate"
+    ],
+    "categories": [
+      "模型选择",
+      "超参调优"
+    ],
+    "tips": "参数空间大的时候考虑用 RandomizedSearchCV。"
+  },
+  {
+    "id": "sklearn.preprocessing.StandardScaler",
+    "name": "StandardScaler",
+    "library": "Scikit-learn",
+    "module": "sklearn.preprocessing",
+    "full_name": "StandardScaler",
+    "signature": "StandardScaler(*, copy=True, with_mean=True, with_std=True)",
+    "description": "标准化特征：减去均值再除以标准差 (z-score)。",
+    "usage": "scaler = StandardScaler()\nX_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)",
+    "example": "from sklearn.preprocessing import StandardScaler\nimport numpy as np\nX = np.random.randn(100, 5) * 10 + 5\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\nprint(X_scaled.mean(axis=0))  # approx 0\nprint(X_scaled.std(axis=0))   # approx 1",
+    "related": [
+      "MinMaxScaler",
+      "RobustScaler",
+      "Normalizer"
+    ],
+    "categories": [
+      "数据预处理",
+      "特征缩放"
+    ],
+    "tips": "训练集上 fit_transform，测试集上只用 transform。"
+  },
+  {
+    "id": "sklearn.preprocessing.MinMaxScaler",
+    "name": "MinMaxScaler",
+    "library": "Scikit-learn",
+    "module": "sklearn.preprocessing",
+    "full_name": "MinMaxScaler",
+    "signature": "MinMaxScaler(feature_range=(0, 1), *, copy=True, clip=False)",
+    "description": "将特征缩放到 [min, max] 范围。",
+    "usage": "scaler = MinMaxScaler()\nX_scaled = scaler.fit_transform(X)",
+    "example": "from sklearn.preprocessing import MinMaxScaler\nX = [[-1, 2], [-0.5, 6], [0, 10], [1, 18]]\nscaler = MinMaxScaler()\nX_scaled = scaler.fit_transform(X)\nprint(X_scaled)",
+    "related": [
+      "StandardScaler",
+      "RobustScaler"
+    ],
+    "categories": [
+      "数据预处理",
+      "特征缩放"
+    ]
+  },
+  {
+    "id": "sklearn.preprocessing.LabelEncoder",
+    "name": "LabelEncoder",
+    "library": "Scikit-learn",
+    "module": "sklearn.preprocessing",
+    "full_name": "LabelEncoder",
+    "signature": "LabelEncoder()",
+    "description": "将标签编码为 0 到 n_classes-1 的整数。",
+    "usage": "le = LabelEncoder()\nlabels_encoded = le.fit_transform(labels)",
+    "example": "from sklearn.preprocessing import LabelEncoder\nle = LabelEncoder()\nlabels = ['cat', 'dog', 'cat', 'bird']\nencoded = le.fit_transform(labels)\nprint(encoded)  # [1, 2, 1, 0]",
+    "related": [
+      "OneHotEncoder",
+      "OrdinalEncoder"
+    ],
+    "categories": [
+      "数据预处理",
+      "编码"
+    ]
+  },
+  {
+    "id": "sklearn.preprocessing.OneHotEncoder",
+    "name": "OneHotEncoder",
+    "library": "Scikit-learn",
+    "module": "sklearn.preprocessing",
+    "full_name": "OneHotEncoder",
+    "signature": "OneHotEncoder(*, categories='auto', drop=None, sparse_output=True, ...)",
+    "description": "将分类特征编码为 one-hot 数值矩阵。",
+    "usage": "encoder = OneHotEncoder()\nX_encoded = encoder.fit_transform(X).toarray()",
+    "example": "from sklearn.preprocessing import OneHotEncoder\nX = [['Male', 1], ['Female', 3], ['Female', 2]]\nencoder = OneHotEncoder()\nX_encoded = encoder.fit_transform(X).toarray()\nprint(X_encoded)",
+    "related": [
+      "LabelEncoder",
+      "OrdinalEncoder",
+      "pd.get_dummies"
+    ],
+    "categories": [
+      "数据预处理",
+      "编码"
+    ]
+  },
+  {
+    "id": "sklearn.linear_model.LinearRegression",
+    "name": "LinearRegression",
+    "library": "Scikit-learn",
+    "module": "sklearn.linear_model",
+    "full_name": "LinearRegression",
+    "signature": "LinearRegression(*, fit_intercept=True, copy_X=True, n_jobs=None, positive=False)",
+    "description": "普通最小二乘线性回归。",
+    "usage": "model = LinearRegression()\nmodel.fit(X_train, y_train)\npredictions = model.predict(X_test)",
+    "example": "from sklearn.linear_model import LinearRegression\nimport numpy as np\nX = np.random.randn(100, 3)\ny = X @ np.array([1.5, -2.0, 0.5]) + np.random.randn(100) * 0.1\nmodel = LinearRegression()\nmodel.fit(X, y)\nprint(f'Coefficients: {model.coef_}')\nprint(f'Intercept: {model.intercept_}')",
+    "related": [
+      "Ridge",
+      "Lasso",
+      "ElasticNet"
+    ],
+    "categories": [
+      "线性模型",
+      "回归"
+    ],
+    "tips": "基本回归模型；对有共线性的数据可用 Ridge。"
+  },
+  {
+    "id": "sklearn.linear_model.LogisticRegression",
+    "name": "LogisticRegression",
+    "library": "Scikit-learn",
+    "module": "sklearn.linear_model",
+    "full_name": "LogisticRegression",
+    "signature": "LogisticRegression(penalty='l2', *, C=1.0, solver='lbfgs', max_iter=100, ...)",
+    "description": "逻辑回归分类器。",
+    "params": [
+      {
+        "name": "penalty",
+        "type": "str",
+        "desc": "正则化: 'l2', 'l1', 'elasticnet'"
+      },
+      {
+        "name": "C",
+        "type": "float",
+        "desc": "正则化强度的倒数"
+      },
+      {
+        "name": "solver",
+        "type": "str",
+        "desc": "优化器: 'lbfgs', 'liblinear', 'saga'"
+      }
+    ],
+    "usage": "model = LogisticRegression()\nmodel.fit(X_train, y_train)\npred = model.predict(X_test)",
+    "example": "from sklearn.linear_model import LogisticRegression\nfrom sklearn.datasets import make_classification\nX, y = make_classification(n_samples=1000, n_features=20, random_state=42)\nmodel = LogisticRegression()\nmodel.fit(X, y)\nprint(f'Accuracy: {model.score(X, y):.3f}')",
+    "related": [
+      "LinearRegression",
+      "SGDClassifier",
+      "RidgeClassifier"
+    ],
+    "categories": [
+      "线性模型",
+      "分类"
+    ]
+  },
+  {
+    "id": "sklearn.metrics.accuracy_score",
+    "name": "accuracy_score",
+    "library": "Scikit-learn",
+    "module": "sklearn.metrics",
+    "full_name": "accuracy_score",
+    "signature": "accuracy_score(y_true, y_pred, *, normalize=True, sample_weight=None)",
+    "description": "计算分类准确率。",
+    "usage": "acc = accuracy_score(y_true, y_pred)\nprint(f'Accuracy: {acc:.3f}')",
+    "example": "from sklearn.metrics import accuracy_score\ny_true = [0, 1, 2, 2, 1]\ny_pred = [0, 1, 1, 2, 1]\nacc = accuracy_score(y_true, y_pred)\nprint(f'Accuracy: {acc:.2f}')",
+    "related": [
+      "precision_score",
+      "recall_score",
+      "f1_score",
+      "classification_report"
+    ],
+    "categories": [
+      "评估指标",
+      "分类"
+    ]
+  },
+  {
+    "id": "sklearn.metrics.f1_score",
+    "name": "f1_score",
+    "library": "Scikit-learn",
+    "module": "sklearn.metrics",
+    "full_name": "f1_score",
+    "signature": "f1_score(y_true, y_pred, *, labels=None, pos_label=1, average='binary', sample_weight=None)",
+    "description": "计算 F1 分数（精确率和召回率的调和平均）。",
+    "usage": "f1 = f1_score(y_true, y_pred, average='macro')",
+    "example": "from sklearn.metrics import f1_score\ny_true = [0, 1, 2, 2, 1]\ny_pred = [0, 1, 1, 2, 1]\nf1_macro = f1_score(y_true, y_pred, average='macro')\nprint(f'Macro F1: {f1_macro:.3f}')",
+    "related": [
+      "accuracy_score",
+      "precision_score",
+      "recall_score",
+      "classification_report"
+    ],
+    "categories": [
+      "评估指标",
+      "分类"
+    ]
+  },
+  {
+    "id": "sklearn.metrics.confusion_matrix",
+    "name": "confusion_matrix",
+    "library": "Scikit-learn",
+    "module": "sklearn.metrics",
+    "full_name": "confusion_matrix",
+    "signature": "confusion_matrix(y_true, y_pred, *, labels=None, sample_weight=None, normalize=None)",
+    "description": "计算混淆矩阵以评估分类准确率。",
+    "usage": "cm = confusion_matrix(y_true, y_pred)\nprint(cm)",
+    "example": "from sklearn.metrics import confusion_matrix\ny_true = [0, 1, 2, 2, 1]\ny_pred = [0, 1, 1, 2, 1]\ncm = confusion_matrix(y_true, y_pred)\nprint(cm)",
+    "related": [
+      "accuracy_score",
+      "f1_score",
+      "classification_report"
+    ],
+    "categories": [
+      "评估指标",
+      "分类"
+    ]
+  },
+  {
+    "id": "sklearn.metrics.classification_report",
+    "name": "classification_report",
+    "library": "Scikit-learn",
+    "module": "sklearn.metrics",
+    "full_name": "classification_report",
+    "signature": "classification_report(y_true, y_pred, *, labels=None, target_names=None, sample_weight=None, digits=2, output_dict=False, zero_division='warn')",
+    "description": "生成主要分类指标报告（精确率、召回率、F1）。",
+    "usage": "print(classification_report(y_true, y_pred, target_names=class_names))",
+    "example": "from sklearn.metrics import classification_report\ny_true = [0, 1, 2, 2, 1]\ny_pred = [0, 1, 1, 2, 1]\nprint(classification_report(y_true, y_pred, target_names=['Class 0', 'Class 1', 'Class 2']))",
+    "related": [
+      "accuracy_score",
+      "f1_score",
+      "confusion_matrix"
+    ],
+    "categories": [
+      "评估指标",
+      "分类"
+    ]
+  },
+  {
+    "id": "sklearn.metrics.mean_squared_error",
+    "name": "mean_squared_error",
+    "library": "Scikit-learn",
+    "module": "sklearn.metrics",
+    "full_name": "mean_squared_error",
+    "signature": "mean_squared_error(y_true, y_pred, *, sample_weight=None, multioutput='uniform_average', squared=True)",
+    "description": "均方误差回归损失。",
+    "usage": "mse = mean_squared_error(y_true, y_pred)",
+    "example": "from sklearn.metrics import mean_squared_error\ny_true = [3, -0.5, 2, 7]\ny_pred = [2.5, 0.0, 2, 8]\nmse = mean_squared_error(y_true, y_pred)\nprint(f'MSE: {mse:.3f}')",
+    "related": [
+      "mean_absolute_error",
+      "r2_score"
+    ],
+    "categories": [
+      "评估指标",
+      "回归"
+    ]
+  },
+  {
+    "id": "sklearn.ensemble.RandomForestClassifier",
+    "name": "RandomForestClassifier",
+    "library": "Scikit-learn",
+    "module": "sklearn.ensemble",
+    "full_name": "RandomForestClassifier",
+    "signature": "RandomForestClassifier(n_estimators=100, *, criterion='gini', max_depth=None, random_state=None, ...)",
+    "description": "随机森林分类器。",
+    "params": [
+      {
+        "name": "n_estimators",
+        "type": "int",
+        "desc": "决策树数量，默认100"
+      },
+      {
+        "name": "max_depth",
+        "type": "int",
+        "desc": "树的最大深度"
+      }
+    ],
+    "usage": "clf = RandomForestClassifier(n_estimators=100, random_state=42)\nclf.fit(X_train, y_train)\npred = clf.predict(X_test)",
+    "example": "from sklearn.ensemble import RandomForestClassifier\nfrom sklearn.datasets import make_classification\nX, y = make_classification(n_samples=1000, n_features=20, random_state=42)\nclf = RandomForestClassifier(n_estimators=100, random_state=42)\nclf.fit(X, y)\nprint(f'Accuracy: {clf.score(X, y):.3f}')",
+    "related": [
+      "RandomForestRegressor",
+      "GradientBoostingClassifier",
+      "DecisionTreeClassifier"
+    ],
+    "categories": [
+      "集成学习",
+      "分类"
+    ],
+    "tips": "n_estimators 越大效果越好但越慢；特征重要性可通过 feature_importances_ 获取。"
+  },
+  {
+    "id": "sklearn.svm.SVC",
+    "name": "SVC",
+    "library": "Scikit-learn",
+    "module": "sklearn.svm",
+    "full_name": "SVC",
+    "signature": "SVC(*, C=1.0, kernel='rbf', degree=3, gamma='scale', probability=False, ...)",
+    "description": "C-支持向量分类器。",
+    "params": [
+      {
+        "name": "C",
+        "type": "float",
+        "desc": "正则化参数"
+      },
+      {
+        "name": "kernel",
+        "type": "str",
+        "desc": "核函数: 'linear','poly','rbf','sigmoid'"
+      }
+    ],
+    "usage": "svm = SVC(kernel='rbf', C=1.0, gamma='scale')\nsvm.fit(X_train, y_train)",
+    "example": "from sklearn.svm import SVC\nfrom sklearn.datasets import make_classification\nX, y = make_classification(n_samples=100, n_features=5, random_state=42)\nclf = SVC(kernel='rbf', probability=True)\nclf.fit(X, y)\nprint(f'Accuracy: {clf.score(X, y):.3f}')",
+    "related": [
+      "LinearSVC",
+      "NuSVC",
+      "SVR"
+    ],
+    "categories": [
+      "SVM",
+      "分类"
+    ]
+  },
+  {
+    "id": "sklearn.cluster.KMeans",
+    "name": "KMeans",
+    "library": "Scikit-learn",
+    "module": "sklearn.cluster",
+    "full_name": "KMeans",
+    "signature": "KMeans(n_clusters=8, *, init='k-means++', n_init='auto', max_iter=300, random_state=None, ...)",
+    "description": "K 均值聚类。",
+    "params": [
+      {
+        "name": "n_clusters",
+        "type": "int",
+        "desc": "簇数量"
+      },
+      {
+        "name": "init",
+        "type": "str",
+        "desc": "初始化方法: 'k-means++', 'random'"
+      }
+    ],
+    "usage": "kmeans = KMeans(n_clusters=3, random_state=42)\nkmeans.fit(X)\nlabels = kmeans.labels_",
+    "example": "from sklearn.cluster import KMeans\nimport numpy as np\nX = np.random.randn(300, 2)\nkmeans = KMeans(n_clusters=3, random_state=42)\nkmeans.fit(X)\nprint(f'Cluster centers: {kmeans.cluster_centers_}')",
+    "related": [
+      "DBSCAN",
+      "AgglomerativeClustering",
+      "MeanShift"
+    ],
+    "categories": [
+      "聚类"
+    ]
+  },
+  {
+    "id": "sklearn.decomposition.PCA",
+    "name": "PCA",
+    "library": "Scikit-learn",
+    "module": "sklearn.decomposition",
+    "full_name": "PCA",
+    "signature": "PCA(n_components=None, *, copy=True, whiten=False, svd_solver='auto', random_state=None)",
+    "description": "主成分分析（线性降维）。",
+    "params": [
+      {
+        "name": "n_components",
+        "type": "int/float",
+        "desc": "保留的成分数或解释方差比例"
+      }
+    ],
+    "usage": "pca = PCA(n_components=2)\nX_reduced = pca.fit_transform(X)",
+    "example": "from sklearn.decomposition import PCA\nimport numpy as np\nX = np.random.randn(100, 10)\npca = PCA(n_components=2)\nX_reduced = pca.fit_transform(X)\nprint(f'Explained variance ratio: {pca.explained_variance_ratio_}')\nprint(f'Reduced shape: {X_reduced.shape}')",
+    "related": [
+      "TruncatedSVD",
+      "KernelPCA",
+      "FactorAnalysis"
+    ],
+    "categories": [
+      "降维"
+    ],
+    "tips": "n_components=0.95 保留 95% 方差；常用于特征可视化和去噪。"
+  },
+  {
+    "id": "sklearn.model_selection.KFold",
+    "name": "KFold",
+    "library": "Scikit-learn",
+    "module": "sklearn.model_selection",
+    "full_name": "KFold",
+    "signature": "KFold(n_splits=5, *, shuffle=False, random_state=None)",
+    "description": "K 折交叉验证器。",
+    "usage": "kf = KFold(n_splits=5, shuffle=True, random_state=42)\nfor train_idx, val_idx in kf.split(X):\n    X_train, X_val = X[train_idx], X[val_idx]",
+    "example": "from sklearn.model_selection import KFold\nimport numpy as np\nX = np.arange(20).reshape(10, 2)\nkf = KFold(n_splits=5)\nfor fold, (train_idx, val_idx) in enumerate(kf.split(X)):\n    print(f'Fold {fold}: train={train_idx}, val={val_idx}')",
+    "related": [
+      "StratifiedKFold",
+      "cross_val_score",
+      "train_test_split"
+    ],
+    "categories": [
+      "模型选择",
+      "数据划分"
+    ]
+  },
+  {
+    "id": "sklearn.pipeline.Pipeline",
+    "name": "Pipeline",
+    "library": "Scikit-learn",
+    "module": "sklearn.pipeline",
+    "full_name": "Pipeline",
+    "signature": "Pipeline(steps, *, memory=None, verbose=False)",
+    "description": "将多个处理步骤组合为一个流水线。",
+    "usage": "pipe = Pipeline([\n    ('scaler', StandardScaler()),\n    ('clf', LogisticRegression())\n])\npipe.fit(X_train, y_train)",
+    "example": "from sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\npipe = Pipeline([\n    ('scaler', StandardScaler()),\n    ('clf', LogisticRegression())\n])\npipe.fit(X_train, y_train)\nscore = pipe.score(X_test, y_test)",
+    "related": [
+      "make_pipeline",
+      "ColumnTransformer"
+    ],
+    "categories": [
+      "模型构建",
+      "流水线"
+    ],
+    "tips": "Pipeline 确保交叉验证时不会发生数据泄露。"
+  },
+  {
+    "id": "pandas.read_csv",
+    "name": "read_csv",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "pd.read_csv",
+    "signature": "pandas.read_csv(filepath_or_buffer, *, sep=',', header='infer', names=None, index_col=None, dtype=None, encoding=None, ...)",
+    "description": "将 CSV 文件读入 DataFrame。",
+    "params": [
+      {
+        "name": "filepath_or_buffer",
+        "type": "str/path",
+        "desc": "CSV 文件路径或 URL"
+      },
+      {
+        "name": "sep",
+        "type": "str",
+        "desc": "分隔符，默认逗号"
+      },
+      {
+        "name": "header",
+        "type": "int",
+        "desc": "用作列名的行号"
+      },
+      {
+        "name": "encoding",
+        "type": "str",
+        "desc": "文件编码，如 'utf-8', 'gbk'"
+      }
+    ],
+    "returns": {
+      "type": "DataFrame"
+    },
+    "usage": "df = pd.read_csv('data.csv')\ndf = pd.read_csv('data.csv', encoding='utf-8', index_col=0)",
+    "example": "import pandas as pd\ndf = pd.read_csv('data.csv')\nprint(df.head())\nprint(df.info())",
+    "related": [
+      "pd.read_excel",
+      "pd.read_json",
+      "pd.DataFrame.to_csv"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame",
+    "name": "DataFrame",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "pd.DataFrame",
+    "signature": "pandas.DataFrame(data=None, index=None, columns=None, dtype=None, copy=None)",
+    "description": "二维、大小可变、潜在异构的表格数据结构。",
+    "usage": "df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})",
+    "example": "import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({\n    'name': ['Alice', 'Bob', 'Charlie'],\n    'age': [25, 30, 35],\n    'score': [85.5, 92.0, 78.3]\n})\nprint(df)",
+    "related": [
+      "pd.Series",
+      "pd.read_csv",
+      "df.head"
+    ],
+    "categories": [
+      "数据结构"
+    ]
+  },
+  {
+    "id": "pandas.Series",
+    "name": "Series",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "pd.Series",
+    "signature": "pandas.Series(data=None, index=None, dtype=None, name=None, copy=None)",
+    "description": "带标签索引的一维数组。",
+    "usage": "s = pd.Series([1, 2, 3, 4], index=['a', 'b', 'c', 'd'])",
+    "example": "import pandas as pd\ns = pd.Series([10, 20, 30, 40], name='values')\nprint(s)",
+    "related": [
+      "pd.DataFrame",
+      "pd.Index"
+    ],
+    "categories": [
+      "数据结构"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.head",
+    "name": "head",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.head",
+    "signature": "DataFrame.head(n=5)",
+    "description": "返回 DataFrame 的前 n 行。",
+    "usage": "df.head(10)",
+    "example": "import pandas as pd\ndf = pd.read_csv('data.csv')\nprint(df.head())  # 前5行",
+    "related": [
+      "df.tail",
+      "df.info",
+      "df.describe"
+    ],
+    "categories": [
+      "数据查看"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.info",
+    "name": "info",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.info",
+    "signature": "DataFrame.info(verbose=None, buf=None, max_cols=None, memory_usage=None, show_counts=None)",
+    "description": "打印 DataFrame 的简要摘要。",
+    "usage": "df.info()",
+    "example": "import pandas as pd\ndf = pd.read_csv('data.csv')\ndf.info()",
+    "related": [
+      "df.head",
+      "df.describe",
+      "df.shape"
+    ],
+    "categories": [
+      "数据查看"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.describe",
+    "name": "describe",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.describe",
+    "signature": "DataFrame.describe(percentiles=None, include=None, exclude=None)",
+    "description": "生成描述性统计信息（计数、均值、标准差、四分位数等）。",
+    "usage": "df.describe()",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': [10, 20, 30, 40, 50]})\nprint(df.describe())",
+    "related": [
+      "df.info",
+      "df.head",
+      "df.corr"
+    ],
+    "categories": [
+      "数据查看"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.groupby",
+    "name": "groupby",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.groupby",
+    "signature": "DataFrame.groupby(by=None, axis=0, level=None, as_index=True, sort=True, ...)",
+    "description": "按指定列或条件对 DataFrame 进行分组。",
+    "usage": "df.groupby('category').mean()",
+    "example": "import pandas as pd\ndf = pd.DataFrame({\n    'category': ['A', 'B', 'A', 'B', 'A'],\n    'value': [10, 20, 15, 25, 30]\n})\nresult = df.groupby('category')['value'].agg(['mean', 'sum', 'count'])\nprint(result)",
+    "related": [
+      "df.pivot_table",
+      "df.agg",
+      "df.transform"
+    ],
+    "categories": [
+      "数据操作",
+      "聚合"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.merge",
+    "name": "merge",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "pd.merge",
+    "signature": "pandas.merge(left, right, how='inner', on=None, left_on=None, right_on=None, ...)",
+    "description": "将两个 DataFrame 按指定键合并（类似 SQL JOIN）。",
+    "params": [
+      {
+        "name": "how",
+        "type": "str",
+        "desc": "连接方式: 'inner','outer','left','right'"
+      }
+    ],
+    "usage": "result = pd.merge(df1, df2, on='key', how='left')",
+    "example": "import pandas as pd\ndf1 = pd.DataFrame({'key': ['A', 'B', 'C'], 'val1': [1, 2, 3]})\ndf2 = pd.DataFrame({'key': ['A', 'B', 'D'], 'val2': [4, 5, 6]})\nresult = pd.merge(df1, df2, on='key', how='inner')\nprint(result)",
+    "related": [
+      "df.join",
+      "pd.concat",
+      "df.merge"
+    ],
+    "categories": [
+      "数据操作",
+      "合并"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.pivot_table",
+    "name": "pivot_table",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.pivot_table",
+    "signature": "DataFrame.pivot_table(values=None, index=None, columns=None, aggfunc='mean', fill_value=None, ...)",
+    "description": "创建电子表格样式的数据透视表。",
+    "usage": "table = df.pivot_table(values='value', index='category', columns='month', aggfunc='sum')",
+    "example": "import pandas as pd\ndf = pd.DataFrame({\n    'category': ['A', 'A', 'B', 'B'],\n    'month': ['Jan', 'Feb', 'Jan', 'Feb'],\n    'value': [10, 20, 15, 25]\n})\ntable = df.pivot_table(values='value', index='category', columns='month', aggfunc='sum')\nprint(table)",
+    "related": [
+      "df.groupby",
+      "pd.crosstab",
+      "df.unstack"
+    ],
+    "categories": [
+      "数据操作",
+      "聚合"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.fillna",
+    "name": "fillna",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.fillna",
+    "signature": "DataFrame.fillna(value=None, *, method=None, axis=None, inplace=False, limit=None)",
+    "description": "用指定的方法填充缺失值(NA/NaN)。",
+    "usage": "df.fillna(0)\ndf['col'].fillna(df['col'].mean(), inplace=True)",
+    "example": "import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({'A': [1, np.nan, 3], 'B': [np.nan, 2, 3]})\ndf_filled = df.fillna(0)\nprint(df_filled)",
+    "related": [
+      "df.dropna",
+      "df.isna",
+      "df.replace"
+    ],
+    "categories": [
+      "数据清洗"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.dropna",
+    "name": "dropna",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.dropna",
+    "signature": "DataFrame.dropna(*, axis=0, how='any', thresh=None, subset=None, inplace=False)",
+    "description": "删除包含缺失值的行或列。",
+    "usage": "df.dropna()\ndf.dropna(axis=1, thresh=5)",
+    "example": "import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({'A': [1, np.nan, 3], 'B': [4, 5, np.nan]})\nclean = df.dropna()\nprint(clean)",
+    "related": [
+      "df.fillna",
+      "df.isna",
+      "df.notna"
+    ],
+    "categories": [
+      "数据清洗"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.drop_duplicates",
+    "name": "drop_duplicates",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.drop_duplicates",
+    "signature": "DataFrame.drop_duplicates(subset=None, *, keep='first', inplace=False, ignore_index=False)",
+    "description": "删除重复行。",
+    "usage": "df.drop_duplicates(subset=['col1', 'col2'], keep='first')",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'A': [1, 1, 2], 'B': [3, 3, 4]})\nunique = df.drop_duplicates()\nprint(unique)",
+    "related": [
+      "df.duplicated",
+      "df.unique"
+    ],
+    "categories": [
+      "数据清洗"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.sort_values",
+    "name": "sort_values",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.sort_values",
+    "signature": "DataFrame.sort_values(by, *, axis=0, ascending=True, inplace=False, kind='quicksort', ...)",
+    "description": "按指定列的值排序。",
+    "usage": "df.sort_values('age', ascending=False)",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'name': ['A', 'B', 'C'], 'score': [85, 92, 78]})\nsorted_df = df.sort_values('score', ascending=False)\nprint(sorted_df)",
+    "related": [
+      "df.sort_index",
+      "df.nlargest",
+      "df.nsmallest"
+    ],
+    "categories": [
+      "数据操作",
+      "排序"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.loc",
+    "name": "loc",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.loc",
+    "signature": "DataFrame.loc[row_indexer, column_indexer]",
+    "description": "基于标签的数据选择器。",
+    "usage": "df.loc[row_labels, col_labels]\ndf.loc[df['age'] > 30, 'name']",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['x', 'y', 'z'])\nprint(df.loc['y'])\nprint(df.loc['x', 'B'])\nprint(df.loc[:, 'A'])",
+    "related": [
+      "df.iloc",
+      "df.at",
+      "df.iat"
+    ],
+    "categories": [
+      "数据选择",
+      "索引"
+    ],
+    "tips": "loc 基于标签，iloc 基于位置。布尔索引: df.loc[df['A'] > 1]。"
+  },
+  {
+    "id": "pandas.DataFrame.iloc",
+    "name": "iloc",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.iloc",
+    "signature": "DataFrame.iloc[row_indexer, column_indexer]",
+    "description": "基于整数位置的数据选择器。",
+    "usage": "df.iloc[0:3, 1:4]\ndf.iloc[:, -1]",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})\nprint(df.iloc[0])      # 第一行\nprint(df.iloc[:, 1])   # 第二列\nprint(df.iloc[0:2, :]) # 前两行",
+    "related": [
+      "df.loc",
+      "df.at",
+      "df.iat"
+    ],
+    "categories": [
+      "数据选择",
+      "索引"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.apply",
+    "name": "apply",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.apply",
+    "signature": "DataFrame.apply(func, axis=0, raw=False, result_type=None, args=(), **kwargs)",
+    "description": "沿 DataFrame 的轴应用函数。",
+    "usage": "df.apply(lambda x: x.max() - x.min())\ndf['new'] = df['col'].apply(lambda x: x * 2)",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})\nresult = df.apply(lambda x: x.sum(), axis=0)\nprint(result)\ndf['A_squared'] = df['A'].apply(lambda x: x ** 2)",
+    "related": [
+      "df.transform",
+      "df.map",
+      "df.applymap"
+    ],
+    "categories": [
+      "数据操作",
+      "函数应用"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.to_csv",
+    "name": "to_csv",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.to_csv",
+    "signature": "DataFrame.to_csv(path_or_buf=None, sep=',', index=True, encoding=None, ...)",
+    "description": "将 DataFrame 写入 CSV 文件。",
+    "usage": "df.to_csv('output.csv', index=False, encoding='utf-8')",
+    "example": "import pandas as pd\ndf = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})\ndf.to_csv('output.csv', index=False)",
+    "related": [
+      "pd.read_csv",
+      "df.to_excel",
+      "df.to_json"
+    ],
+    "categories": [
+      "I/O操作"
+    ]
+  },
+  {
+    "id": "pandas.DataFrame.corr",
+    "name": "corr",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "df.corr",
+    "signature": "DataFrame.corr(method='pearson', min_periods=1, numeric_only=False)",
+    "description": "计算各列之间的相关系数矩阵。",
+    "usage": "corr_matrix = df.corr()",
+    "example": "import pandas as pd\nimport numpy as np\ndf = pd.DataFrame(np.random.randn(100, 3), columns=['A', 'B', 'C'])\nprint(df.corr())",
+    "related": [
+      "df.cov",
+      "df.describe"
+    ],
+    "categories": [
+      "统计",
+      "分析"
+    ]
+  },
+  {
+    "id": "pandas.concat",
+    "name": "concat",
+    "library": "Pandas",
+    "module": "pandas",
+    "full_name": "pd.concat",
+    "signature": "pandas.concat(objs, *, axis=0, join='outer', ignore_index=False, keys=None, ...)",
+    "description": "沿指定轴连接 DataFrame/Series。",
+    "usage": "result = pd.concat([df1, df2, df3], axis=0)",
+    "example": "import pandas as pd\ndf1 = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})\ndf2 = pd.DataFrame({'A': [5, 6], 'B': [7, 8]})\nresult = pd.concat([df1, df2], ignore_index=True)\nprint(result)",
+    "related": [
+      "pd.merge",
+      "df.join",
+      "df.append"
+    ],
+    "categories": [
+      "数据操作",
+      "合并"
+    ]
+  }
+]
