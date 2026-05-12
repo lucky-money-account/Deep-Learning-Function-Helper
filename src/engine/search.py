@@ -5,6 +5,7 @@
 import json
 import os
 import re
+import sys
 from collections import defaultdict
 from difflib import SequenceMatcher
 
@@ -21,7 +22,13 @@ try:
 except ImportError:
     JIEBA_AVAILABLE = False
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+def _get_data_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.join(sys._MEIPASS, "data")
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+
+
+DATA_DIR = _get_data_dir()
 DB_PATH = os.path.join(DATA_DIR, "functions.json")
 
 
