@@ -123,115 +123,158 @@ class SearchEngine:
         if not query.strip():
             return self._filtered_all(libraries, categories, limit)
         query_lower = query.strip().lower()
-        query_tokens = tokenize(query_lower)
 
-        # 1. 精确匹配（函数名）
-        exact_matches = []
+        # 同义词扩展
+        synonyms = [
+            ("画图", "绘制绘图plot画图表"),
+            ("读取", "加载读入打开importreadloadopen"),
+            ("保存", "存储写入导出savewritedump"),
+            ("损失", "loss误差代价cost"),
+            ("池化", "pooling下采样降采样subsampling"),
+            ("归一化", "标准化规范化正则化normalizescalestandardnorm"),
+            ("卷积", "convolutionconvfilter核"),
+            ("全连接", "线性linearfc稠密dense"),
+            ("边缘", "边界edgecontour轮廓boundary"),
+            ("检测", "识别detect识别find"),
+            ("分类", "classify分类classifier预测predict"),
+            ("旋转", "翻转rotatewarp变换flip"),
+            ("增强", "augment抖动随机jitter"),
+            ("特征", "feature特征向量"),
+            ("训练", "train拟合fit学习learn"),
+            ("测试", "test评估evaluate验证valid"),
+            ("图像", "图片影像图imgimagepicture"),
+            ("文本", "文字text字符串stringtoken"),
+            ("数据", "data数据集dataset样本sample"),
+        ]
+        expanded_query = query_lower
+        for syn_key, syn_list_str in synonyms:
+            if syn_key in query_lower:
+                expanded_query += " " + syn_list_str
+
+        query_tokens = tokenize(expanded_query)
+        query_tokens = [t for t in query_tokens if len(t) >= 1]
+        # 去重保留顺序
+        seen_t = set()
+        query_tokens = [t for t in query_tokens if not (t in seen_t or seen_t.add(t))]
+
+        scored = {}  # func_id -> score
+
+        def add_score(f, s):
+            if f["id"] not in scored or s > scored[f["id"]]:
+                scored[f["id"]] = s
+
+        # 1. 精确匹配（函数名）—— 最高分
         for func in self.functions:
             full = func.get("full_name", "").lower()
             name = func.get("name", "").lower()
             target = f"{func.get('module', '').lower()}.{name}"
             if query_lower == full or query_lower == name or query_lower == target:
-                exact_matches.append(func)
+                add_score(func, 100)
 
         # 2. 前缀匹配
-        prefix_matches = []
         for func in self.functions:
-            if func in exact_matches:
-                continue
             name = func.get("name", "").lower()
             full = func.get("full_name", "").lower()
             if name.startswith(query_lower) or full.startswith(query_lower):
-                prefix_matches.append(func)
+                add_score(func, 90)
 
-        # 3. 描述/分类/提示等语义内容匹配
-        description_matches = []
-        desc_scores = {}
+        # 3. 语义内容匹配 —— 按 token 覆盖率和字段权重打分
         for func in self.functions:
-            if func in exact_matches or func in prefix_matches:
-                continue
-            desc_text = " ".join([
-                func.get("description", ""),
-                " ".join(func.get("categories", [])),
-                func.get("tips", ""),
-            ]).lower()
-            score = 0
-            desc_tokens = tokenize(desc_text)
-            for qt in query_tokens:
-                if len(qt) >= 1:
-                    for dt in desc_tokens:
-                        if qt in dt or dt in qt:
-                            score += 1
-            if score > 0:
-                desc_scores[func["id"]] = score
-                description_matches.append(func)
-        description_matches.sort(key=lambda f: desc_scores.get(f["id"], 0), reverse=True)
+            desc = func.get("description", "").lower()
+            cats = " ".join(func.get("categories", [])).lower()
+            tips = func.get("tips", "").lower()
+            lib = func.get("library", "").lower()
+            params_text = ""
+            if "params" in func:
+                params_text = " ".join(p.get("desc", "") for p in func["params"]).lower()
 
-        # 4. TF-IDF 全文搜索
-        if SKLEARN_AVAILABLE:
-            token_query = " ".join(tokenize(query_lower))
+            matched = 0
+            for qt in query_tokens:
+                # 在描述/分类/提示/参数中查找
+                found = False
+                for field_text in [desc, cats, tips, params_text, lib]:
+                    if qt in field_text:
+                        found = True
+                        break
+                if found:
+                    matched += 1
+
+            if matched > 0:
+                coverage = matched / len(query_tokens)
+                # 分数范围 50-88: 完整覆盖=88, 部分覆盖按比例
+                score = 50 + int(coverage * 38)
+                # 奖励: 查询词连续匹配在描述中 (phrase bonus)
+                if query_lower in desc or query_lower in cats:
+                    score += 5
+                # 额外奖励: 分类标签匹配
+                if any(qt in cats for qt in query_tokens if len(qt) >= 2):
+                    score += 3
+                add_score(func, score)
+
+        # 4. TF-IDF 全文搜索 —— 低分区间，仅在描述匹配薄弱时补充
+        if SKLEARN_AVAILABLE and len(query_tokens) > 0:
+            token_query = " ".join(query_tokens)
             try:
                 query_vec = self.vectorizer.transform([token_query])
                 sims = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-                ranked = []
-                for i in range(len(self.functions)):
-                    f = self.functions[i]
-                    if f in exact_matches or f in prefix_matches or f in description_matches:
-                        continue
-                    if sims[i] > 0:
-                        ranked.append((f, sims[i]))
-                ranked.sort(key=lambda x: x[1], reverse=True)
-                ranked = [f for f, s in ranked]
+                for i, sim in enumerate(sims):
+                    if sim > 0.08:
+                        # TF-IDF 分数范围 1-20，远低于语义匹配
+                        tfidf_score = min(20, int(sim * 25))
+                        add_score(self.functions[i], tfidf_score)
             except Exception:
-                ranked = []
+                pass
         else:
             scores = self._score_tf(query_lower)
-            ranked = [(self.functions[i], scores[i]) for i in range(len(self.functions))
-                      if self.functions[i] not in exact_matches
-                      and self.functions[i] not in prefix_matches
-                      and self.functions[i] not in description_matches]
-            ranked.sort(key=lambda x: x[1], reverse=True)
-            ranked = [f for f, s in ranked if s > 0]
+            max_s = max(scores) if scores else 1
+            for i, s in enumerate(scores):
+                if s > 0:
+                    tfidf_score = min(15, int(s / max(max_s, 1) * 15))
+                    add_score(self.functions[i], tfidf_score)
 
-        # 5. 模糊匹配（对低相关性结果补充）
-        fuzzy_matches = []
-        if len(exact_matches) + len(prefix_matches) + len(description_matches) + len(ranked) < 5:
+        # 5. 模糊匹配 —— 低优先级，仅当结果太少时补充
+        threshold = 3
+        if len(scored) < threshold:
             for func in self.functions:
-                if func in exact_matches or func in prefix_matches or func in description_matches or func in ranked:
+                if func["id"] in scored:
                     continue
-                name = func.get("name", "")
-                desc = func.get("description", "")
-                if (SequenceMatcher(None, query_lower, name.lower()).ratio() > 0.6 or
-                        SequenceMatcher(None, query_lower, desc.lower()).ratio() > 0.4):
-                    fuzzy_matches.append(func)
-            fuzzy_matches = fuzzy_matches[:5]
+                name = func.get("name", "").lower()
+                desc = func.get("description", "").lower()
+                name_ratio = SequenceMatcher(None, query_lower, name).ratio()
+                desc_ratio = SequenceMatcher(None, query_lower, desc).ratio()
+                if name_ratio > 0.5 or desc_ratio > 0.4:
+                    add_score(func, max(1, int(max(name_ratio, desc_ratio) * 10)))
 
         # 6. 相关函数扩展
-        result_ids = set(f["id"] for f in exact_matches + prefix_matches + description_matches + ranked + fuzzy_matches)
-        extra = []
-        for func in exact_matches + prefix_matches + description_matches:
+        result_ids = set(scored.keys())
+        extra = {}
+        for fid in list(scored.keys()):
+            func = self.func_dict.get(fid)
+            if not func:
+                continue
             for rel in func.get("related", []):
                 if rel in self.func_dict and self.func_dict[rel]["id"] not in result_ids:
-                    extra.append(self.func_dict[rel])
-                    result_ids.add(self.func_dict[rel]["id"])
+                    extra[self.func_dict[rel]["id"]] = self.func_dict[rel]
 
-        results = exact_matches + prefix_matches + description_matches + ranked + extra + fuzzy_matches
+        # 合并并排序
+        all_results = []
+        for fid, s in sorted(scored.items(), key=lambda x: x[1], reverse=True):
+            f = self.func_dict.get(fid)
+            if f:
+                all_results.append(f)
 
-        # 去重
-        seen = set()
-        unique = []
-        for f in results:
-            if f["id"] not in seen:
-                seen.add(f["id"])
-                unique.append(f)
+        # 追加相关函数（排最后）
+        for fid, f in extra.items():
+            if f not in all_results:
+                all_results.append(f)
 
         # 按库和类别过滤
         if libraries:
-            unique = [f for f in unique if f.get("library", "") in libraries]
+            all_results = [f for f in all_results if f.get("library", "") in libraries]
         if categories:
-            unique = [f for f in unique if any(c in categories for c in f.get("categories", []))]
+            all_results = [f for f in all_results if any(c in categories for c in f.get("categories", []))]
 
-        return unique[:limit]
+        return all_results[:limit]
 
     def _filtered_all(self, libraries, categories, limit):
         results = list(self.functions)
