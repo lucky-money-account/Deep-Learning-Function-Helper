@@ -17,6 +17,18 @@ class MainWindow:
     def __init__(self, engine):
         self.engine = engine
         self.root = tk.Tk()
+
+        # 高 DPI 下字体清晰渲染
+        try:
+            import ctypes
+            hdc = ctypes.windll.user32.GetDC(0)
+            dpi = ctypes.windll.gdi32.GetDeviceCaps(hdc, 88)
+            ctypes.windll.user32.ReleaseDC(0, hdc)
+            if dpi > 96:
+                self.root.tk.call('tk', 'scaling', dpi / 72.0)
+        except Exception:
+            pass
+
         self.root.title("深度学习查询助手")
         self.root.geometry("1400x900")
         self.root.minsize(1100, 700)

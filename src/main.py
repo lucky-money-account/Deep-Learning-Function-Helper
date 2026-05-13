@@ -3,6 +3,22 @@
 """
 import sys
 import os
+import ctypes
+
+
+def _setup_dpi():
+    """启用 DPI 感知，提升字体渲染清晰度"""
+    if sys.platform == "win32":
+        try:
+            # 使用 Win10 1703+ 的 PerMonitorV2 DPI 感知
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except Exception:
+            try:
+                ctypes.windll.user32.SetProcessDPIAware()
+            except Exception:
+                pass
+
+_setup_dpi()
 
 
 def get_project_root():
@@ -15,6 +31,7 @@ def get_project_root():
 PROJ_ROOT = get_project_root()
 sys.path.insert(0, PROJ_ROOT)
 
+import tkinter as tk
 from src.engine.search import SearchEngine
 from src.gui.main_window import MainWindow
 
