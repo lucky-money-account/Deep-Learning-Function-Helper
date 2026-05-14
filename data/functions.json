@@ -1378,7 +1378,7 @@
     "module": "torch.optim",
     "full_name": "optim.SGD",
     "signature": "optim.SGD(params, lr, momentum=0, dampening=0, weight_decay=0, nesterov=False)",
-    "description": "随机梯度下降优化器，可选带动量。",
+    "description": "随机梯度下降优化器。每次迭代沿负梯度方向更新参数。\n\n更新公式 (带动量):\n  v_t = momentum*v_{t-1} + grad\n  param -= lr * v_t\n\nNesterov 动量: 先按动量方向走一步，再在那点算梯度 (前瞻更新)。",
     "params": [
       {
         "name": "params",
@@ -1388,30 +1388,40 @@
       {
         "name": "lr",
         "type": "float",
-        "desc": "学习率"
+        "desc": "学习率，必填"
       },
       {
         "name": "momentum",
         "type": "float",
-        "desc": "动量因子"
+        "desc": "动量因子(0~1)，默认 0"
+      },
+      {
+        "name": "dampening",
+        "type": "float",
+        "desc": "动量阻尼，默认 0"
       },
       {
         "name": "weight_decay",
         "type": "float",
-        "desc": "权重衰减"
+        "desc": "L2 正则化系数"
+      },
+      {
+        "name": "nesterov",
+        "type": "bool",
+        "desc": "是否启用 Nesterov 动量"
       }
     ],
     "usage": "optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)",
-    "example": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nmodel = nn.Linear(10, 2)\noptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)\noptimizer.zero_grad()\nloss = model(torch.randn(32, 10)).sum()\nloss.backward()\noptimizer.step()",
+    "example": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nmodel = nn.Linear(10, 2)\noptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)\n\noptimizer.zero_grad()\nloss = model(torch.randn(32, 10)).sum()\nloss.backward()\noptimizer.step()",
     "related": [
       "optim.Adam",
       "optim.AdamW",
-      "optim.RMSprop"
+      "optim.SGD"
     ],
     "categories": [
       "优化器"
     ],
-    "tips": "图像分类中 momentum=0.9 是经典配置。"
+    "tips": "图像分类经典配置: lr=0.1, momentum=0.9, step decay at 30/60/90 epochs。加了 momentum 后收敛更快更稳；weight_decay 防过拟合。"
   },
   {
     "id": "torch.optim.Adam",
@@ -1420,30 +1430,41 @@
     "module": "torch.optim",
     "full_name": "optim.Adam",
     "signature": "optim.Adam(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)",
-    "description": "Adam 优化器，结合 AdaGrad 和 RMSProp 优点。",
+    "description": "Adam (自适应矩估计) 优化器，结合 Momentum 和 RMSprop。\n\n更新公式:\n  m_t = beta1*m_{t-1} + (1-beta1)*grad      -- 一阶矩 (动量)\n  v_t = beta2*v_{t-1} + (1-beta2)*grad^2    -- 二阶矩 (自适应学习率)\n  m_hat = m_t / (1-beta1^t)                  -- 偏差校正\n  v_hat = v_t / (1-beta2^t)\n  param -= lr * m_hat / (sqrt(v_hat) + eps)",
     "params": [
       {
         "name": "lr",
         "type": "float",
-        "desc": "学习率，默认1e-3"
+        "desc": "学习率，默认 1e-3"
       },
       {
         "name": "betas",
         "type": "tuple",
-        "desc": "梯度一阶/二阶矩估计的系数"
+        "desc": "一阶/二阶矩的 EMA 衰减率，默认 (0.9, 0.999)"
+      },
+      {
+        "name": "eps",
+        "type": "float",
+        "desc": "数值稳定性项，默认 1e-8"
+      },
+      {
+        "name": "weight_decay",
+        "type": "float",
+        "desc": "权重衰减 (非 L2 正则化！)"
       }
     ],
     "usage": "optimizer = optim.Adam(model.parameters(), lr=0.001)",
-    "example": "import torch.optim as optim\noptimizer = optim.Adam(model.parameters(), lr=0.001)",
+    "example": "import torch.optim as optim\noptimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))",
     "related": [
       "optim.AdamW",
-      "optim.SGD",
-      "optim.RMSprop"
+      "optim.NAdam",
+      "optim.RAdam",
+      "optim.SGD"
     ],
     "categories": [
       "优化器"
     ],
-    "tips": "默认 lr=1e-3 适用大多数任务。推荐用 AdamW。"
+    "tips": "最常用的优化器之一。注意: Adam 的 weight_decay 等价于对参数做 L2 衰减(已过时)，推荐使用 AdamW。"
   },
   {
     "id": "torch.optim.AdamW",
@@ -1451,19 +1472,36 @@
     "library": "PyTorch",
     "module": "torch.optim",
     "full_name": "optim.AdamW",
-    "signature": "optim.AdamW(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01)",
-    "description": "AdamW 优化器，将权重衰减与自适应学习率解耦。",
+    "signature": "optim.AdamW(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)",
+    "description": "AdamW —— 解耦权重衰减的 Adam。将 weight_decay 从梯度更新中解耦，直接在参数上施加衰减。\n\n对比 Adam:\n  Adam:  grad = grad + weight_decay * param  (L2 正则化)\n  AdamW: param = param - lr * weight_decay * param  (解耦衰减)\n\n解耦后 weight_decay 与学习率无关，调参更容易。",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率，默认 1e-3"
+      },
+      {
+        "name": "betas",
+        "type": "tuple",
+        "desc": "(0.9, 0.999)"
+      },
+      {
+        "name": "weight_decay",
+        "type": "float",
+        "desc": "权重衰减系数，默认 0.01"
+      }
+    ],
     "usage": "optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)",
     "example": "import torch.optim as optim\noptimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)",
     "related": [
       "optim.Adam",
-      "optim.SGD",
-      "optim.RAdam"
+      "optim.NAdam",
+      "optim.SGD"
     ],
     "categories": [
       "优化器"
     ],
-    "tips": "Transformer 训练默认优化器；推荐 weight_decay=0.01~0.1。"
+    "tips": "Transformer/CV 训练首选。推荐 weight_decay=0.01~0.1。训练大模型时配合 CosineAnnealingWarmRestarts。"
   },
   {
     "id": "torch.optim.lr_scheduler.StepLR",
@@ -1882,6 +1920,476 @@
       "工具函数"
     ],
     "tips": "配合 torch.backends.cudnn.deterministic=True 和 benchmark=False 确保完全可复现。"
+  },
+  {
+    "id": "torch.optim.Adagrad",
+    "name": "Adagrad",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.Adagrad",
+    "signature": "optim.Adagrad(params, lr=0.01, lr_decay=0, weight_decay=0, initial_accumulator_value=0, eps=1e-10)",
+    "description": "自适应梯度优化器。为每个参数自适应调整学习率 —— 频繁更新的参数学习率变小，稀疏参数学习率保持较大。特别适合处理稀疏数据。\n\n更新规则:\n  G_t += grad^2          -- 累积梯度平方\n  param -= lr * grad / sqrt(G_t + eps)",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率，默认 0.01"
+      },
+      {
+        "name": "lr_decay",
+        "type": "float",
+        "desc": "学习率衰减因子，默认 0"
+      },
+      {
+        "name": "weight_decay",
+        "type": "float",
+        "desc": "权重衰减 (L2 正则化)"
+      },
+      {
+        "name": "eps",
+        "type": "float",
+        "desc": "数值稳定性项，默认 1e-10"
+      }
+    ],
+    "usage": "optimizer = optim.Adagrad(model.parameters(), lr=0.01)",
+    "example": "import torch.optim as optim\noptimizer = optim.Adagrad(model.parameters(), lr=0.01, weight_decay=1e-5)",
+    "related": [
+      "optim.Adam",
+      "optim.RMSprop",
+      "optim.SGD"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "优点: 适合稀疏特征 (如 NLP 词嵌入)。缺点: 学习率单调递减，后期可能过小。通常 Adam 更常用。"
+  },
+  {
+    "id": "torch.optim.RMSprop",
+    "name": "RMSprop",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.RMSprop",
+    "signature": "optim.RMSprop(params, lr=0.01, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0, centered=False)",
+    "description": "均方根传播优化器。维护梯度平方的指数移动平均，解决 Adagrad 学习率单调衰减问题。\n\n更新规则:\n  v_t = alpha*v_{t-1} + (1-alpha)*grad^2   -- 梯度平方的 EMA\n  param -= lr * grad / (sqrt(v_t) + eps)",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率，默认 0.01"
+      },
+      {
+        "name": "alpha",
+        "type": "float",
+        "desc": "平滑常数 (衰减率)，默认 0.99"
+      },
+      {
+        "name": "momentum",
+        "type": "float",
+        "desc": "动量因子，默认 0"
+      },
+      {
+        "name": "eps",
+        "type": "float",
+        "desc": "数值稳定性项"
+      }
+    ],
+    "usage": "optimizer = optim.RMSprop(model.parameters(), lr=0.001, alpha=0.99)",
+    "example": "import torch.optim as optim\noptimizer = optim.RMSprop(model.parameters(), lr=0.001, momentum=0.9)",
+    "related": [
+      "optim.Adam",
+      "optim.Adagrad",
+      "optim.SGD"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "Hinton 在 Coursera 课程中提出。RNN 训练常用；推荐 lr=0.001。"
+  },
+  {
+    "id": "torch.optim.Adadelta",
+    "name": "Adadelta",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.Adadelta",
+    "signature": "optim.Adadelta(params, lr=1.0, rho=0.9, eps=1e-06, weight_decay=0)",
+    "description": "Adadelta 优化器，Adagrad 的扩展。不需要手动设置学习率，自适应调整步长。\n\n核心思想: 用参数更新量的 EMA 替代全局学习率，使不同参数有独立的动态学习率。",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率系数，默认 1.0 (Adadelta 不需要调 lr)"
+      },
+      {
+        "name": "rho",
+        "type": "float",
+        "desc": "梯度平方 EMA 的衰减系数，默认 0.9"
+      },
+      {
+        "name": "eps",
+        "type": "float",
+        "desc": "数值稳定性项"
+      }
+    ],
+    "usage": "optimizer = optim.Adadelta(model.parameters(), lr=1.0)",
+    "example": "import torch.optim as optim\noptimizer = optim.Adadelta(model.parameters())  # 默认参数就挺好",
+    "related": [
+      "optim.Adagrad",
+      "optim.RMSprop",
+      "optim.Adam"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "优点: 不需要手动调学习率。缺点: 收敛可能较慢。不如 Adam 常用。"
+  },
+  {
+    "id": "torch.optim.NAdam",
+    "name": "NAdam",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.NAdam",
+    "signature": "optim.NAdam(params, lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, momentum_decay=0.004, *, foreach=None, differentiable=False)",
+    "description": "NAdam = Nesterov 动量 + Adam。将 Nesterov 加速梯度引入 Adam 框架，收敛更快。",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率，默认 0.002"
+      },
+      {
+        "name": "betas",
+        "type": "tuple",
+        "desc": "梯度一阶/二阶矩的 EMA 系数"
+      },
+      {
+        "name": "momentum_decay",
+        "type": "float",
+        "desc": "动量衰减率"
+      }
+    ],
+    "usage": "optimizer = optim.NAdam(model.parameters(), lr=0.002)",
+    "example": "import torch.optim as optim\noptimizer = optim.NAdam(model.parameters(), lr=0.002, weight_decay=1e-4)",
+    "related": [
+      "optim.Adam",
+      "optim.AdamW",
+      "optim.SGD"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "PyTorch 1.12+ 新增。结合 Nesterov 动量，收敛速度优于标准 Adam。"
+  },
+  {
+    "id": "torch.optim.RAdam",
+    "name": "RAdam",
+    "library": "PyTorch",
+    "module": "torch.optim",
+    "full_name": "optim.RAdam",
+    "signature": "optim.RAdam(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, *, foreach=None, differentiable=False)",
+    "description": "Rectified Adam。在训练初期用 SGD 预热，自适应学习率方差校正后再切换为 Adam。解决了 Adam 在训练初期收敛不稳定的问题。",
+    "params": [
+      {
+        "name": "lr",
+        "type": "float",
+        "desc": "学习率，默认 0.001"
+      },
+      {
+        "name": "betas",
+        "type": "tuple",
+        "desc": "一阶/二阶矩的 EMA 系数"
+      }
+    ],
+    "usage": "optimizer = optim.RAdam(model.parameters(), lr=0.001)",
+    "example": "import torch.optim as optim\noptimizer = optim.RAdam(model.parameters(), lr=0.001, weight_decay=1e-2)",
+    "related": [
+      "optim.Adam",
+      "optim.AdamW",
+      "optim.SGD"
+    ],
+    "categories": [
+      "优化器"
+    ],
+    "tips": "训练初期自动线性预热，无需手动 Warmup；对学习率更鲁棒。"
+  },
+  {
+    "id": "torch.optim.lr_scheduler.CosineAnnealingWarmRestarts",
+    "name": "CosineAnnealingWarmRestarts",
+    "library": "PyTorch",
+    "module": "torch.optim.lr_scheduler",
+    "full_name": "optim.lr_scheduler.CosineAnnealingWarmRestarts",
+    "signature": "optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0, T_mult=1, eta_min=0)",
+    "description": "带热重启的余弦退火调度。学习率按余弦曲线衰减，然后周期性地「重启」到初始值，形成锯齿状曲线。\n\nlr 曲线:\n  /\\    /\\    /\\\n /  \\  /  \\  /  \\\n/    \\/    \\/    \\",
+    "params": [
+      {
+        "name": "T_0",
+        "type": "int",
+        "desc": "第一次重启的 epoch 数"
+      },
+      {
+        "name": "T_mult",
+        "type": "int",
+        "desc": "每次重启后周期放大倍数，默认 1"
+      },
+      {
+        "name": "eta_min",
+        "type": "float",
+        "desc": "最低学习率"
+      }
+    ],
+    "usage": "scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)",
+    "example": "scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)\nfor epoch in range(100):\n    train()\n    scheduler.step()",
+    "related": [
+      "lr_scheduler.CosineAnnealingLR",
+      "lr_scheduler.StepLR"
+    ],
+    "categories": [
+      "优化器",
+      "学习率调度"
+    ],
+    "tips": "周期性重启能跳出局部最优，在 CIFAR/ImageNet 上可提升精度。"
+  },
+  {
+    "id": "torchvision.models.resnet18",
+    "name": "resnet18",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.resnet18",
+    "signature": "torchvision.models.resnet18(*, weights=None, progress=True, **kwargs)",
+    "description": "ResNet-18 残差网络。18 层深度 (17 卷积 + 1 全连接)。\n\n架构:\n  Input(3x224x224)\n  -> Conv7x7,64,/2 -> BN -> ReLU\n  -> MaxPool3x3,/2\n  -> [ResBlock(64,64)x2] -> [ResBlock(64,128,stride2)x2]\n  -> [ResBlock(128,256,stride2)x2] -> [ResBlock(256,512,stride2)x2]\n  -> AdaptiveAvgPool -> FC(512,1000)\n\n残差连接: output = F(x) + x  (跳跃连接解决梯度消失)",
+    "params": [
+      {
+        "name": "weights",
+        "type": "ResNet18_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1 或 None"
+      },
+      {
+        "name": "progress",
+        "type": "bool",
+        "desc": "是否显示下载进度条"
+      }
+    ],
+    "returns": {
+      "type": "nn.Module",
+      "desc": "ResNet-18 模型"
+    },
+    "usage": "from torchvision.models import resnet18, ResNet18_Weights\nmodel = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)",
+    "example": "import torch\nfrom torchvision.models import resnet18, ResNet18_Weights\n\nmodel = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)\n# 替换最后一层做迁移学习\nmodel.fc = torch.nn.Linear(512, 10)\n# 推理\nx = torch.randn(1, 3, 224, 224)\ny = model(x)\nprint(y.shape)  # torch.Size([1, 10])",
+    "related": [
+      "models.resnet34",
+      "models.resnet50",
+      "models.vgg16"
+    ],
+    "categories": [
+      "模型架构",
+      "CNN",
+      "迁移学习"
+    ],
+    "tips": "参数量 ~11.7M。轻量级 ResNet，适合快速实验。预训练模型输入需归一化: mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225]。"
+  },
+  {
+    "id": "torchvision.models.resnet50",
+    "name": "resnet50",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.resnet50",
+    "signature": "torchvision.models.resnet50(*, weights=None, progress=True, **kwargs)",
+    "description": "ResNet-50 残差网络。50 层深度，使用 Bottleneck 残差块。\n\nBottleneck 结构 (1x1->3x3->1x1):\n  input(256d) -> Conv1x1,64 -> ReLU -> Conv3x3,64 -> ReLU  -> Conv1x1,256 -> +input -> ReLU\n\n架构层级: [3,4,6,3] 个 Bottleneck 块",
+    "params": [
+      {
+        "name": "weights",
+        "type": "ResNet50_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1/V2 或 DEFAULT"
+      }
+    ],
+    "usage": "from torchvision.models import resnet50\nmodel = resnet50(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import resnet50\nmodel = resnet50(weights='IMAGENET1K_V1')\nmodel.fc = torch.nn.Linear(2048, 100)  # 自定义分类头\nx = torch.randn(2, 3, 224, 224)\ny = model(x)\nprint(y.shape)  # torch.Size([2, 100])",
+    "related": [
+      "models.resnet18",
+      "models.resnet101",
+      "models.resnet152"
+    ],
+    "categories": [
+      "模型架构",
+      "CNN",
+      "迁移学习"
+    ],
+    "tips": "参数量 ~25.6M。最常用的 ResNet 变体。迁移学习时通常冻结 stem + layer1-3，仅训练 layer4 + fc。"
+  },
+  {
+    "id": "torchvision.models.vgg16",
+    "name": "vgg16",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.vgg16",
+    "signature": "torchvision.models.vgg16(*, weights=None, progress=True, **kwargs)",
+    "description": "VGG-16 卷积网络。16 层 (13 卷积 + 3 全连接)，全部使用 3x3 卷积核。\n\n架构:\n  -> [Conv3x3,64]x2 -> MaxPool\n  -> [Conv3x3,128]x2 -> MaxPool\n  -> [Conv3x3,256]x3 -> MaxPool\n  -> [Conv3x3,512]x3 -> MaxPool\n  -> [Conv3x3,512]x3 -> MaxPool\n  -> FC(25088,4096) -> ReLU -> Dropout\n  -> FC(4096,4096) -> ReLU -> Dropout\n  -> FC(4096,1000)",
+    "params": [
+      {
+        "name": "weights",
+        "type": "VGG16_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1 或 DEFAULT"
+      }
+    ],
+    "returns": {
+      "type": "nn.Module",
+      "desc": "VGG-16 模型"
+    },
+    "usage": "from torchvision.models import vgg16\nmodel = vgg16(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import vgg16\nmodel = vgg16(weights='IMAGENET1K_V1')\n# 替换分类器\nmodel.classifier[6] = torch.nn.Linear(4096, 10)\nx = torch.randn(1, 3, 224, 224)\ny = model(x)\nprint(y.shape)  # torch.Size([1, 10])",
+    "related": [
+      "models.vgg11",
+      "models.vgg19",
+      "models.resnet18"
+    ],
+    "categories": [
+      "模型架构",
+      "CNN"
+    ],
+    "tips": "参数量 ~138M (很大！主要是全连接层)。适合做特征提取，但已被 ResNet 替代。迁移学习时通常只换最后的 FC。"
+  },
+  {
+    "id": "torchvision.models.mobilenet_v3_large",
+    "name": "mobilenet_v3_large",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.mobilenet_v3_large",
+    "signature": "torchvision.models.mobilenet_v3_large(*, weights=None, progress=True, **kwargs)",
+    "description": "MobileNetV3-Large 轻量级网络。使用深度可分离卷积 + SE 注意力模块 + h-swish 激活，专为移动端设计。\n\n核心模块:\n  深度可分离卷积 = DepthwiseConv + PointwiseConv (大幅减少参数)\n  SE 模块 = 全局池化 -> FC -> ReLU -> FC -> Sigmoid (通道注意力)",
+    "params": [
+      {
+        "name": "weights",
+        "type": "MobileNet_V3_Large_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1/V2"
+      }
+    ],
+    "usage": "from torchvision.models import mobilenet_v3_large\nmodel = mobilenet_v3_large(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import mobilenet_v3_large\nmodel = mobilenet_v3_large(weights='IMAGENET1K_V1')\n# 修改分类器\nmodel.classifier[3] = torch.nn.Linear(1280, 10)\nmodel.eval()",
+    "related": [
+      "models.mobilenet_v3_small",
+      "models.shufflenet_v2",
+      "models.efficientnet_b0"
+    ],
+    "categories": [
+      "模型架构",
+      "CNN",
+      "轻量级"
+    ],
+    "tips": "参数量 ~5.5M，适合移动端部署。Android/iOS 上 CoreML/TFLite 推理速度快。"
+  },
+  {
+    "id": "torchvision.models.efficientnet_b0",
+    "name": "efficientnet_b0",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.efficientnet_b0",
+    "signature": "torchvision.models.efficientnet_b0(*, weights=None, progress=True, **kwargs)",
+    "description": "EfficientNet-B0 高效网络。通过 NAS (神经架构搜索) 找到的深度/宽度/分辨率最优配比。使用 MBConv 模块 (Mobile Inverted Bottleneck) + SE 注意力。\n\n缩放公式: 复合缩放深度 d、宽度 w、分辨率 r，\n  d = alpha^phi, w = beta^phi, r = gamma^phi\n  alpha*beta^2*gamma^2 ≈ 2",
+    "params": [
+      {
+        "name": "weights",
+        "type": "EfficientNet_B0_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1"
+      }
+    ],
+    "usage": "from torchvision.models import efficientnet_b0\nmodel = efficientnet_b0(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import efficientnet_b0\nmodel = efficientnet_b0(weights='IMAGENET1K_V1')\nmodel.classifier[1] = torch.nn.Linear(1280, 10)",
+    "related": [
+      "models.efficientnet_b1",
+      "models.mobilenet_v3_large",
+      "models.resnet50"
+    ],
+    "categories": [
+      "模型架构",
+      "CNN",
+      "轻量级"
+    ],
+    "tips": "参数量 ~5.3M，精度接近 ResNet-50。B0-B7 系列按需选择，数字越大精度越高但越慢。"
+  },
+  {
+    "id": "torchvision.models.densenet121",
+    "name": "densenet121",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.densenet121",
+    "signature": "torchvision.models.densenet121(*, weights=None, progress=True, **kwargs)",
+    "description": "DenseNet-121 密集连接网络。每层与前面所有层直接连接 (特征复用)。\n\nDense Block 结构:\n  x0 -> H1 -> [x0,x1] -> H2 -> [x0,x1,x2] -> H3 -> ...\n  (每层输出与之前所有输出在通道维拼接)\n\n增长率 k=32: 每层输出 32 个新特征图",
+    "params": [
+      {
+        "name": "weights",
+        "type": "DenseNet121_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1"
+      }
+    ],
+    "usage": "from torchvision.models import densenet121\nmodel = densenet121(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import densenet121\nmodel = densenet121(weights='IMAGENET1K_V1')\nmodel.classifier = torch.nn.Linear(1024, 10)\nx = torch.randn(2, 3, 224, 224)\ny = model(x)\nprint(y.shape)",
+    "related": [
+      "models.densenet161",
+      "models.resnet50",
+      "models.efficientnet_b0"
+    ],
+    "categories": [
+      "模型架构",
+      "CNN"
+    ],
+    "tips": "参数量 ~8M，比 ResNet-50 少但精度更高。密集连接促进梯度流动和特征复用。"
+  },
+  {
+    "id": "torchvision.models.vit_b_16",
+    "name": "vit_b_16",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.vit_b_16",
+    "signature": "torchvision.models.vit_b_16(*, weights=None, progress=True, **kwargs)",
+    "description": "Vision Transformer (ViT-B/16)。将图像切分为 16x16 的 Patch，像处理文本 Token 一样用 Transformer 编码。\n\n架构:\n  Image -> [Patch Embedding] -> +Position Embedding\n  -> +[CLS] Token\n  -> Transformer Encoder x12\n  -> MLP Head(CLS) -> Class",
+    "params": [
+      {
+        "name": "weights",
+        "type": "ViT_B_16_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1/SWAG"
+      }
+    ],
+    "usage": "from torchvision.models import vit_b_16\nmodel = vit_b_16(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import vit_b_16\nmodel = vit_b_16(weights='IMAGENET1K_V1')\nmodel.heads.head = torch.nn.Linear(768, 100)\nx = torch.randn(1, 3, 224, 224)\ny = model(x)\nprint(y.shape)  # torch.Size([1, 100])",
+    "related": [
+      "models.vit_b_32",
+      "models.swin_t",
+      "models.resnet50"
+    ],
+    "categories": [
+      "模型架构",
+      "Transformer",
+      "ViT"
+    ],
+    "tips": "参数量 ~86M。需要大数据集预训练 (ImageNet-21k/JFT)。小数据集上不如 CNN，但在大数据集上超越 ResNet。"
+  },
+  {
+    "id": "torchvision.models.swin_t",
+    "name": "swin_t",
+    "library": "PyTorch",
+    "module": "torchvision.models",
+    "full_name": "models.swin_t",
+    "signature": "torchvision.models.swin_t(*, weights=None, progress=True, **kwargs)",
+    "description": "Swin Transformer (Tiny)。引入滑动窗口注意力 (Shifted Window) 的层次化 Transformer，兼顾全局建模和局部细节。\n\n核心创新:\n  W-MSA: 窗口内自注意力 (高效)\n  SW-MSA: 移位窗口自注意力 (跨窗口交互)\n  Patch Merging: 类似 CNN 池化，逐层降低分辨率",
+    "params": [
+      {
+        "name": "weights",
+        "type": "Swin_T_Weights",
+        "desc": "预训练权重: IMAGENET1K_V1"
+      }
+    ],
+    "usage": "from torchvision.models import swin_t\nmodel = swin_t(weights='IMAGENET1K_V1')",
+    "example": "import torch\nfrom torchvision.models import swin_t\nmodel = swin_t(weights='IMAGENET1K_V1')\nmodel.head = torch.nn.Linear(768, 100)",
+    "related": [
+      "models.vit_b_16",
+      "models.swin_s",
+      "models.resnet50"
+    ],
+    "categories": [
+      "模型架构",
+      "Transformer",
+      "ViT"
+    ],
+    "tips": "参数量 ~29M。层次化结构输出多尺度特征，适合目标检测和分割下游任务。"
   },
   {
     "id": "numpy.array",
