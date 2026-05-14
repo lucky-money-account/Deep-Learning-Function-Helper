@@ -107,8 +107,9 @@ class CodeHighlighter:
 
             m = re.match(r'([ubf]?r?("""|\'\'\'|"|\'))', line[pos:])
             if m:
-                quote = m.group(0)
-                end_pos = line.find(quote, pos + len(quote))
+                quote = m.group(2)  # 仅取引号部分
+                prefix_len = len(m.group(0))
+                end_pos = line.find(quote, pos + prefix_len)
                 if end_pos == -1:
                     end_pos = len(line)
                 else:
@@ -236,10 +237,15 @@ class SearchBar(tk.Frame):
         self.suggest_list.delete(0, tk.END)
         for s in suggestions:
             self.suggest_list.insert(tk.END, s)
-        self.suggest_list.config(height=min(len(suggestions), 8))
-        # 放置在下拉位置
+        rows = min(len(suggestions), 8)
+        self.suggest_list.config(height=rows)
+        self.entry.update_idletasks()
         x = self.entry.winfo_rootx() - self.master.winfo_rootx()
         y = self.entry.winfo_rooty() - self.master.winfo_rooty() + self.entry.winfo_height()
+        list_height = rows * 28
+        master_height = self.master.winfo_height()
+        if y + list_height > master_height:
+            y = self.entry.winfo_rooty() - self.master.winfo_rooty() - list_height - 4
         self.suggest_list.place(x=x, y=y + 4, width=self.entry.winfo_width())
         self.suggest_list.lift()
         self.suggestions_visible = True
@@ -432,6 +438,26 @@ class ResultList(tk.Frame):
     def _on_canvas_configure(self, event):
         self.canvas.itemconfig(self.canvas_window, width=event.width)
 
+    def _bind_root_scroll(self):
+        root = self.winfo_toplevel()
+        root.bind("<MouseWheel>", self._on_mousewheel, add="+")
+        self.bind("<Destroy>", lambda e: root.unbind("<MouseWheel>", self._on_mousewheel))
+
+    def _on_mousewheel(self, event):
+        wx, wy = event.x_root, event.y_root
+        if self._inside_panel(wx, wy):
+            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _inside_panel(self, rx, ry):
+        try:
+            x = self.winfo_rootx()
+            y = self.winfo_rooty()
+            w = self.winfo_width()
+            h = self.winfo_height()
+            return x <= rx <= x + w and y <= ry <= y + h
+        except Exception:
+            return False
+
     def show_results(self, functions):
         for widget in self.scroll_frame.winfo_children():
             widget.destroy()
@@ -480,7 +506,7 @@ class ResultList(tk.Frame):
         name_label = tk.Label(
             inner, text=func.get("full_name", func.get("name", "")),
             font=FONTS["subheading"], fg="#e2e8f0", bg=card["bg"],
-            anchor=tk.W
+            anchor=tk.W, wraplength=400
         )
         name_label.pack(side=tk.LEFT)
         name_label.bind("<Button-1>", lambda e, f=func: self.on_select(f) if self.on_select else None)
@@ -537,11 +563,24 @@ class DetailPanel(tk.Frame):
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.canvas.bind("<Configure>", self._on_canvas_configure)
         self._bind_root_scroll()
+        self._canvas_width = 700
+
+        # 初始占位提示
+        self.placeholder = tk.Label(
+            self.content_frame,
+            text="\n\n  深度学习查询助手\n\n"
+                 "  在左侧搜索函数名或关键词\n"
+                 "  支持 PyTorch · NumPy · Matplotlib · OpenCV · Sklearn · Pandas\n\n"
+                 "  点击左侧函数名查看详细文档",
+            font=FONTS["heading"], fg=COLORS["muted"], bg=COLORS["panel_bg"],
+            justify=tk.LEFT, anchor=tk.W
+        )
+        self.placeholder.pack(pady=50, padx=24, fill=tk.X)
 
     def _bind_root_scroll(self):
         root = self.winfo_toplevel()
         root.bind("<MouseWheel>", self._on_mousewheel, add="+")
-        self.bind("<Destroy>", lambda e: root.unbind("<MouseWheel>", self._wheel_id) if hasattr(self, "_wheel_id") else None)
+        self.bind("<Destroy>", lambda e: root.unbind("<MouseWheel>", self._on_mousewheel))
 
     def _on_mousewheel(self, event):
         wx, wy = event.x_root, event.y_root
@@ -558,20 +597,9 @@ class DetailPanel(tk.Frame):
         except Exception:
             return False
 
-        # 初始占位
-        self.placeholder = tk.Label(
-            self.content_frame,
-            text="\n\n  深度学习查询助手\n\n"
-                 "  在左侧搜索函数名或关键词\n"
-                 "  支持 PyTorch · NumPy · Matplotlib · OpenCV · Sklearn · Pandas\n\n"
-                 "  点击左侧函数名查看详细文档",
-            font=FONTS["heading"], fg=COLORS["muted"], bg=COLORS["panel_bg"],
-            justify=tk.LEFT, anchor=tk.W
-        )
-        self.placeholder.pack(pady=50, padx=24, fill=tk.X)
-
     def _on_canvas_configure(self, event):
         self.canvas.itemconfig(self.canvas_window, width=event.width)
+        self._canvas_width = event.width
 
     def show(self, func):
         self.current_func = func
@@ -612,7 +640,7 @@ class DetailPanel(tk.Frame):
                 row.pack(fill=tk.X, pady=1)
                 tk.Label(
                     row, text=f"  {param['name']}", font=FONTS["code"],
-                    fg="#facc15", bg=COLORS["panel_bg"], anchor=tk.W, width=24
+                    fg="#facc15", bg=COLORS["panel_bg"], anchor=tk.W
                 ).pack(side=tk.LEFT)
                 tk.Label(
                     row, text=f" ({param.get('type', '')})", font=FONTS["normal"],
@@ -621,7 +649,7 @@ class DetailPanel(tk.Frame):
                 tk.Label(
                     row, text=f"  {param.get('desc', '')}", font=FONTS["normal"],
                     fg=COLORS["text"], bg=COLORS["panel_bg"], anchor=tk.W,
-                    wraplength=520
+                    wraplength=560
                 ).pack(side=tk.LEFT, padx=8)
 
         # === 返回值 ===
@@ -717,7 +745,10 @@ class DetailPanel(tk.Frame):
             highlightthickness=0, selectbackground=COLORS["accent"],
             state=tk.NORMAL, cursor="arrow"
         )
-        text_widget.pack(fill=tk.X)
+        h_scroll = tk.Scrollbar(code_frame, orient=tk.HORIZONTAL, command=text_widget.xview)
+        text_widget.configure(xscrollcommand=h_scroll.set)
+        text_widget.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        h_scroll.pack(fill=tk.X, side=tk.BOTTOM)
         highlighter = CodeHighlighter(text_widget, FONTS["code"])
         highlighter.highlight(code)
         text_widget.config(state=tk.DISABLED, height=code.count("\n") + 2)
