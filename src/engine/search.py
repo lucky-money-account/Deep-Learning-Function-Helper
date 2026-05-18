@@ -172,6 +172,61 @@ SYNONYM_MAP = {
 
 SYNONYM_KEYS = sorted(SYNONYM_MAP.keys(), key=len, reverse=True)
 
+# ========== 英文同义词 / 缩写扩展 ==========
+EN_SYNONYM_MAP = {
+    "sgd": "SGD stochastic gradient descent optimizer stochasticgradientdescent",
+    "adam": "ADAM optimizer adamw adaptive moment estimation",
+    "cnn": "CNN conv convolutional neural network conv2d convolution",
+    "rnn": "RNN recurrent neural network lstm gru",
+    "resnet": "ResNet residual network resnet18 resnet50 resnet101 resnet152",
+    "vgg": "VGG vgg16 vgg19 visual geometry group",
+    "gan": "GAN generative adversarial network generator discriminator",
+    "nlp": "NLP natural language processing text token embedding transformer bert",
+    "cv": "CV computer vision image picture photo detect classify segment",
+    "relu": "ReLU relu activation rectified linear unit",
+    "bn": "BN batchnorm batchnormalization batch norm batchnorm2d",
+    "ln": "LN layernorm layernormalization layer norm",
+    "lr": "lr learning rate learningrate scheduler",
+    "fc": "FC fully connected linear dense fullconnected",
+    "mse": "MSE meansquarederror l2 loss regression meansquarederror",
+    "crossentropy": "CrossEntropy crossentropyloss cross entropy nll loss",
+    "bce": "BCE binarycrossentropy binary cross entropy sigmoid",
+    "svm": "SVM svc support vector machine supportvectormachine",
+    "pca": "PCA principal component analysis dimensionality reduction",
+    "kmeans": "KMeans kmeans k means clustering cluster",
+    "dropout": "dropout drop out regularization regularize",
+    "pooling": "pooling pool maxpool avgpool adaptivepool downsample",
+    "upsample": "upsample upsample interpolate resize scale upsampling",
+    "augment": "augment augmentation aug flip rotate crop transform dataaug",
+    "backward": "backward backprop backpropagation gradient grad autograd",
+    "inference": "inference infer eval evaluate predict predict test",
+    "pretrained": "pretrained pretrain weights transfer learning finetune",
+    "dataset": "dataset dataloader datasetdata dataloader batch sampler",
+    "tensor": "tensor array ndarray matrix tensor vector",
+    "loss": "loss lossfunction criterion cost error objective mse crossentropy bce",
+    "accuracy": "accuracy acc eval metric score f1 precision recall",
+    "optimizer": "optim optimizer optimization sgd adam rmsprop adagrad",
+    "scheduler": "scheduler lrscheduler learningrate schedule decay cosine",
+    "transformer": "transformer attention selfattention vit swin bert gpt",
+    "embedding": "embedding embed word2vec vector representation token",
+    "concat": "concat concatenate stack merge join combine cat",
+    "split": "split chunk divide partition segment train_test_split",
+    "save": "save load checkpoint persist dump state_dict pickle store",
+    "load": "load save checkpoint restore from state_dict pickle",
+    "resize": "resize scale reshape size shape dim resize resize crop",
+    "flip": "flip rotate mirror transpose horizontal vertical rotate rotation",
+    "normalize": "normalize norm normalize standardize scale batchnorm",
+    "clamp": "clamp clip clip clip limit threshold bound",
+    "argmax": "argmax argmax max maximum index topk arg",
+    "softmax": "softmax softmax probability prob logsoftmax sigmoid",
+    "matmul": "matmul matmul mm bmm matrix multiply dot product",
+    "imread": "imread imread imshow imwrite load image read",
+    "cvtcolor": "cvtcolor cvtColor color convert gray bgr rgb hsv",
+    "threshold": "threshold threshold binary binary adaptive otsu",
+    "morphology": "morphology morph morphological erode dilate open close",
+}
+EN_SYNONYM_KEYS = sorted(EN_SYNONYM_MAP.keys(), key=len, reverse=True)
+
 
 class SearchEngine:
     def __init__(self):
@@ -216,11 +271,16 @@ class SearchEngine:
 
     @staticmethod
     def _expand_query(query):
-        """查询扩展：将输入中的关键词替换为扩展词"""
+        """查询扩展：中英文同义词扩展"""
         q = query.lower()
+        # 中文同义词
         for key in SYNONYM_KEYS:
             if key in q:
                 q += " " + SYNONYM_MAP[key]
+        # 英文同义词
+        for key in EN_SYNONYM_KEYS:
+            if key in q:
+                q += " " + EN_SYNONYM_MAP[key]
         return q
 
     def _bm25_score(self, query, doc_idx, k1=1.5, b=0.75):
