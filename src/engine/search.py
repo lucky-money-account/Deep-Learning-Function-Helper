@@ -1,8 +1,9 @@
 """
 搜索引擎模块
-实现 TF-IDF 向量化 + 前缀匹配 + 描述语义搜索 + 模糊匹配的混合搜索算法
+实现 BM25 + 前缀匹配 + 语义扩展 + 模糊匹配的混合搜索算法
 """
 import json
+import math
 import os
 import re
 import sys
@@ -11,17 +12,17 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 
 try:
+    import jieba
+    JIEBA_AVAILABLE = True
+except ImportError:
+    JIEBA_AVAILABLE = False
+
+try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-
-try:
-    import jieba
-    JIEBA_AVAILABLE = True
-except ImportError:
-    JIEBA_AVAILABLE = False
 
 def _get_data_dir():
     if getattr(sys, 'frozen', False):
@@ -116,14 +117,69 @@ LIBRARY_DOCS = [
 
 LIBRARY_URLS = {d["name"]: d["url"] for d in LIBRARY_DOCS}
 
+# ========== 同义词扩展映射 ==========
+SYNONYM_MAP = {
+    "画图": "绘制绘图plot画图表",
+    "读取": "加载读入打开importreadloadopen",
+    "保存": "存储写入导出savewritedump持久化",
+    "损失": "loss误差代价cost",
+    "池化": "pooling下采样降采样subsampling",
+    "归一化": "标准化规范化正则化normalizescalestandardnormbatchnormlayernorm",
+    "卷积": "convolutionconvfilter核卷积层",
+    "全连接": "线性linearfc稠密dense全连接层",
+    "边缘": "边界edgecontour轮廓boundary",
+    "检测": "识别detect识别find探测",
+    "分类": "classify分类classifier预测predictclass",
+    "旋转": "翻转rotatewarp变换flip仿射",
+    "增强": "augment抖动随机jitter增强aug",
+    "特征": "feature特征向量特征提取feat",
+    "训练": "train拟合fit学习learn训练",
+    "测试": "test评估evaluate验证valid推断推理infer",
+    "图像": "图片影像图imgimagepicture",
+    "文本": "文字text字符串stringtoken",
+    "数据": "data数据集dataset样本sample",
+    "矩阵": "matrixmatmul乘法点积dotmatrixtensor张量",
+    "向量": "vector向量嵌入embedding",
+    "激活": "activationrelu激活函数sigmoidtanhgelu",
+    "正则化": "regularization正则化dropout权重衰减weightdecay",
+    "优化": "optimizer优化器优化梯度下降sgdadam",
+    "网络": "network模型model网络架构net",
+    "加载": "载入读取导入importloadopenread",
+    "分割": "split划分分割切分segment",
+    "聚类": "cluster聚类kmeansgroup",
+    "降维": "pca降维减少维度压缩dimreduce",
+    "评估": "metric评估指标评价score准确率accuracy",
+    "生成": "generate生成产生create构建",
+    "变形": "reshape变换形状转换transposeviewpermute",
+    "索引": "index索引位置下标选取lociloc",
+    "填充": "pad填充补全paddingfill",
+    "裁剪": "crop裁剪切除截断clip",
+    "拼接": "concatenate拼接连接合并stackcatconcat",
+    "梯度": "gradient梯度导数backward求导自动微分autograd",
+    "随机": "random随机rand随机数噪声stochastic",
+    "变换": "transform变换转换transformationaugment",
+    "注意力": "attention注意力transformer自注意力selfattention",
+    "嵌入": "embedding词嵌入向量表示embed",
+    "归一": "norm归一化标准化normalizebatchnorm",
+    "误差": "errorloss误差损失代价cost",
+    "残差": "residual残差跳跃连接resnet",
+    "深度": "deep深度可分离depthwise",
+    "学习率": "learningrate学习率lr调度scheduler",
+    "模型": "model模型网络架构训练",
+    "可视化": "visualization绘图plot显示imshow可视化visual",
+    "尺寸": "size形状大小维度shape维度dim",
+}
+
+SYNONYM_KEYS = sorted(SYNONYM_MAP.keys(), key=len, reverse=True)
+
 
 class SearchEngine:
     def __init__(self):
         self.functions = []
         self.func_dict = {}
-        self.tfidf_matrix = None
-        self.vectorizer = None
-        self.corpus = []
+        self.corpus_tokens = []  # 每个函数的 token 列表
+        self.doc_freq = defaultdict(int)  # 词文档频率
+        self.avg_doc_len = 0
         self._load_data()
 
     def _load_data(self):
@@ -137,96 +193,75 @@ class SearchEngine:
         self._build_index()
 
     def _build_index(self):
+        """构建 BM25 倒排索引"""
+        total_len = 0
         for func in self.functions:
-            text_parts = [
+            text = " ".join([
                 func.get("full_name", ""),
                 func.get("name", ""),
-                func.get("module", ""),
                 func.get("description", ""),
-                func.get("description", ""),  # 双倍权重让描述更突出
+                func.get("description", ""),
                 " ".join(func.get("categories", [])),
                 " ".join(func.get("categories", [])),
                 func.get("tips", ""),
                 func.get("library", ""),
-            ]
-            if "params" in func:
-                for p in func["params"]:
-                    text_parts.append(p.get("name", ""))
-                    text_parts.append(p.get("desc", ""))
-            text = " ".join(text_parts)
+            ] + ([p.get("desc", "") for p in func.get("params", [])] if "params" in func else []))
             tokens = tokenize(text)
-            self.corpus.append(" ".join(tokens))
-        if SKLEARN_AVAILABLE:
-            self.vectorizer = TfidfVectorizer(
-                max_features=5000, analyzer="word",
-                ngram_range=(1, 3), token_pattern=r"(?u)\b\w+\b"
-            )
-            self.tfidf_matrix = self.vectorizer.fit_transform(self.corpus)
-        else:
-            self._build_inverted_index()
+            self.corpus_tokens.append(tokens)
+            total_len += len(tokens)
+            for tok in set(tokens):
+                self.doc_freq[tok] += 1
 
-    def _build_inverted_index(self):
-        self.inverted_index = defaultdict(set)
-        for idx, text in enumerate(self.corpus):
-            for token in tokenize(text):
-                if len(token) >= 1:
-                    self.inverted_index[token].add(idx)
+        self.avg_doc_len = total_len / max(len(self.functions), 1)
 
-    def _score_tf(self, query):
-        query_tokens = set(tokenize(query))
-        scores = [0] * len(self.corpus)
-        for token in query_tokens:
-            if len(token) < 1:
+    @staticmethod
+    def _expand_query(query):
+        """查询扩展：将输入中的关键词替换为扩展词"""
+        q = query.lower()
+        for key in SYNONYM_KEYS:
+            if key in q:
+                q += " " + SYNONYM_MAP[key]
+        return q
+
+    def _bm25_score(self, query, doc_idx, k1=1.5, b=0.75):
+        """BM25 评分"""
+        doc_tokens = self.corpus_tokens[doc_idx]
+        doc_len = len(doc_tokens)
+        term_freqs = defaultdict(int)
+        for t in doc_tokens:
+            term_freqs[t] += 1
+
+        score = 0.0
+        N = len(self.functions)
+        for qt in query:
+            tf = term_freqs.get(qt, 0)
+            if tf == 0:
                 continue
-            for idx in self.inverted_index.get(token, set()):
-                scores[idx] += 1
-        return scores
+            df = self.doc_freq.get(qt, 0)
+            if df == 0:
+                continue
+            idf = math.log((N - df + 0.5) / (df + 0.5) + 1.0)
+            numerator = tf * (k1 + 1)
+            denominator = tf + k1 * (1 - b + b * doc_len / max(self.avg_doc_len, 1))
+            score += idf * numerator / denominator
+        return score
 
     def search(self, query, libraries=None, categories=None, limit=20):
         if not query.strip():
             return self._filtered_all(libraries, categories, limit)
+
         query_lower = query.strip().lower()
+        expanded = self._expand_query(query_lower)
+        query_tokens = tokenize(expanded)
+        query_tokens = list(dict.fromkeys([t for t in query_tokens if len(t) >= 1]))
 
-        # 同义词扩展
-        synonyms = [
-            ("画图", "绘制绘图plot画图表"),
-            ("读取", "加载读入打开importreadloadopen"),
-            ("保存", "存储写入导出savewritedump"),
-            ("损失", "loss误差代价cost"),
-            ("池化", "pooling下采样降采样subsampling"),
-            ("归一化", "标准化规范化正则化normalizescalestandardnorm"),
-            ("卷积", "convolutionconvfilter核"),
-            ("全连接", "线性linearfc稠密dense"),
-            ("边缘", "边界edgecontour轮廓boundary"),
-            ("检测", "识别detect识别find"),
-            ("分类", "classify分类classifier预测predict"),
-            ("旋转", "翻转rotatewarp变换flip"),
-            ("增强", "augment抖动随机jitter"),
-            ("特征", "feature特征向量"),
-            ("训练", "train拟合fit学习learn"),
-            ("测试", "test评估evaluate验证valid"),
-            ("图像", "图片影像图imgimagepicture"),
-            ("文本", "文字text字符串stringtoken"),
-            ("数据", "data数据集dataset样本sample"),
-        ]
-        expanded_query = query_lower
-        for syn_key, syn_list_str in synonyms:
-            if syn_key in query_lower:
-                expanded_query += " " + syn_list_str
-
-        query_tokens = tokenize(expanded_query)
-        query_tokens = [t for t in query_tokens if len(t) >= 1]
-        # 去重保留顺序
-        seen_t = set()
-        query_tokens = [t for t in query_tokens if not (t in seen_t or seen_t.add(t))]
-
-        scored = {}  # func_id -> score
+        scored = {}
 
         def add_score(f, s):
             if f["id"] not in scored or s > scored[f["id"]]:
                 scored[f["id"]] = s
 
-        # 1. 精确匹配（函数名）—— 最高分
+        # 1. 精确匹配 —— 100 分
         for func in self.functions:
             full = func.get("full_name", "").lower()
             name = func.get("name", "").lower()
@@ -234,81 +269,65 @@ class SearchEngine:
             if query_lower == full or query_lower == name or query_lower == target:
                 add_score(func, 100)
 
-        # 2. 前缀匹配
+        # 2. 前缀匹配 —— 90 分
         for func in self.functions:
             name = func.get("name", "").lower()
             full = func.get("full_name", "").lower()
             if name.startswith(query_lower) or full.startswith(query_lower):
                 add_score(func, 90)
 
-        # 3. 语义内容匹配 —— 按 token 覆盖率和字段权重打分
+        # 3. 字段级语义匹配 —— 描述/分类/提示/参数中直接查找查询词
         for func in self.functions:
             desc = func.get("description", "").lower()
             cats = " ".join(func.get("categories", [])).lower()
             tips = func.get("tips", "").lower()
             lib = func.get("library", "").lower()
-            params_text = ""
-            if "params" in func:
-                params_text = " ".join(p.get("desc", "") for p in func["params"]).lower()
+            params_text = " ".join(p.get("desc", "") for p in func.get("params", [])) if "params" in func else ""
 
+            # 用原始查询做精确短语匹配（权重最高）
+            phrase_score = 0
+            if query_lower in desc:
+                phrase_score += 30  # 描述中完整出现
+            if query_lower in cats:
+                phrase_score += 20  # 分类标签中完整出现
+
+            # 用扩展查询做 token 覆盖率匹配
             matched = 0
             for qt in query_tokens:
-                # 在描述/分类/提示/参数中查找
-                found = False
                 for field_text in [desc, cats, tips, params_text, lib]:
                     if qt in field_text:
-                        found = True
+                        matched += 1
                         break
-                if found:
-                    matched += 1
 
-            if matched > 0:
-                coverage = matched / len(query_tokens)
-                # 分数范围 50-88: 完整覆盖=88, 部分覆盖按比例
-                score = 50 + int(coverage * 38)
-                # 奖励: 查询词连续匹配在描述中 (phrase bonus)
-                if query_lower in desc or query_lower in cats:
-                    score += 5
-                # 额外奖励: 分类标签匹配
-                if any(qt in cats for qt in query_tokens if len(qt) >= 2):
-                    score += 3
-                add_score(func, score)
+            if matched > 0 or phrase_score > 0:
+                coverage = matched / max(len(query_tokens), 1)
+                score = 50 + int(coverage * 30) + phrase_score
+                add_score(func, min(88, score))
 
-        # 4. TF-IDF 全文搜索 —— 低分区间，仅在描述匹配薄弱时补充
-        if SKLEARN_AVAILABLE and len(query_tokens) > 0:
-            token_query = " ".join(query_tokens)
-            try:
-                query_vec = self.vectorizer.transform([token_query])
-                sims = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-                for i, sim in enumerate(sims):
-                    if sim > 0.08:
-                        # TF-IDF 分数范围 1-20，远低于语义匹配
-                        tfidf_score = min(20, int(sim * 25))
-                        add_score(self.functions[i], tfidf_score)
-            except Exception:
-                pass
-        else:
-            scores = self._score_tf(query_lower)
-            max_s = max(scores) if scores else 1
-            for i, s in enumerate(scores):
-                if s > 0:
-                    tfidf_score = min(15, int(s / max(max_s, 1) * 15))
-                    add_score(self.functions[i], tfidf_score)
+        # 4. BM25 全文语义搜索 —— 补充，仅对尚未匹配的函数
+        for i, func in enumerate(self.functions):
+            if func["id"] in scored:
+                continue
+            bm25 = self._bm25_score(query_tokens, i)
+            if bm25 > 0:
+                cat_bonus = sum(1 for qt in query_tokens if len(qt) >= 2 and any(qt in c.lower() for c in func.get("categories", [])))
+                total = min(45, int(bm25 * 20) + cat_bonus * 2)
+                if total > 0:
+                    add_score(func, total)
 
-        # 5. 模糊匹配 —— 低优先级，仅当结果太少时补充
-        threshold = 3
-        if len(scored) < threshold:
+        # 4. 模糊匹配 —— 低优先级，仅当结果太少时补充
+        if len(scored) < 4:
             for func in self.functions:
                 if func["id"] in scored:
                     continue
                 name = func.get("name", "").lower()
                 desc = func.get("description", "").lower()
-                name_ratio = SequenceMatcher(None, query_lower, name).ratio()
-                desc_ratio = SequenceMatcher(None, query_lower, desc).ratio()
-                if name_ratio > 0.5 or desc_ratio > 0.4:
-                    add_score(func, max(1, int(max(name_ratio, desc_ratio) * 10)))
+                nr = SequenceMatcher(None, query_lower, name).ratio()
+                dr = SequenceMatcher(None, query_lower, desc).ratio()
+                if nr > 0.5 or dr > 0.4:
+                    add_score(func, max(1, int(max(nr, dr) * 15)))
 
-        # 6. 相关函数扩展
+        # 5. 相关函数扩展
         result_ids = set(scored.keys())
         extra = {}
         for fid in list(scored.keys()):
@@ -319,19 +338,11 @@ class SearchEngine:
                 if rel in self.func_dict and self.func_dict[rel]["id"] not in result_ids:
                     extra[self.func_dict[rel]["id"]] = self.func_dict[rel]
 
-        # 合并并排序
-        all_results = []
-        for fid, s in sorted(scored.items(), key=lambda x: x[1], reverse=True):
-            f = self.func_dict.get(fid)
-            if f:
-                all_results.append(f)
-
-        # 追加相关函数（排最后）
+        all_results = [self.func_dict[fid] for fid, _ in sorted(scored.items(), key=lambda x: x[1], reverse=True) if fid in self.func_dict]
         for fid, f in extra.items():
             if f not in all_results:
                 all_results.append(f)
 
-        # 按库和类别过滤
         if libraries:
             all_results = [f for f in all_results if f.get("library", "") in libraries]
         if categories:
