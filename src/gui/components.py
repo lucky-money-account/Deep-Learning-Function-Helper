@@ -458,6 +458,56 @@ class ResultList(tk.Frame):
         except Exception:
             return False
 
+    def show_empty_with_links(self, query, doc_links, open_url_callback):
+        for widget in self.scroll_frame.winfo_children():
+            widget.destroy()
+
+        header = tk.Label(
+            self.scroll_frame,
+            text=f"  没有找到与 \"{query}\" 匹配的函数",
+            font=FONTS["subheading"], fg=COLORS["muted"], bg=COLORS["bg"],
+            anchor=tk.W
+        )
+        header.pack(fill=tk.X, pady=(20, 8), padx=16)
+
+        sub = tk.Label(
+            self.scroll_frame,
+            text="  可以直接查阅各库的官方文档：",
+            font=FONTS["normal"], fg=COLORS["muted"], bg=COLORS["bg"],
+            anchor=tk.W
+        )
+        sub.pack(fill=tk.X, padx=16, pady=(0, 12))
+
+        for doc in doc_links:
+            link_frame = tk.Frame(self.scroll_frame, bg=COLORS["card_bg"], cursor="hand2")
+            link_frame.pack(fill=tk.X, padx=12, pady=3)
+            link_frame.bind("<Button-1>", lambda e, u=doc["url"]: open_url_callback(u))
+            link_frame.bind("<Enter>", lambda e, f=link_frame: f.config(bg=COLORS["highlight"]))
+            link_frame.bind("<Leave>", lambda e, f=link_frame: f.config(bg=COLORS["card_bg"]))
+
+            inner = tk.Frame(link_frame, bg=link_frame["bg"])
+            inner.pack(fill=tk.X, padx=16, pady=10)
+            inner.bind("<Button-1>", lambda e, u=doc["url"]: open_url_callback(u))
+
+            icon_label = tk.Label(
+                inner, text=f" {doc.get('icon', doc['name'][:2])} ", font=FONTS["code"],
+                bg=COLORS["tag_bg"], fg=COLORS["tag_text"], padx=8, pady=2
+            )
+            icon_label.pack(side=tk.LEFT, padx=(0, 10))
+
+            name_label = tk.Label(
+                inner, text=f"{doc['name']} 官方文档", font=FONTS["subheading"],
+                fg=COLORS["accent"], bg=link_frame["bg"], cursor="hand2"
+            )
+            name_label.pack(side=tk.LEFT)
+            name_label.bind("<Button-1>", lambda e, u=doc["url"]: open_url_callback(u))
+
+            desc_label = tk.Label(
+                inner, text=f"  {doc['desc']}", font=FONTS["small"],
+                fg=COLORS["muted"], bg=link_frame["bg"]
+            )
+            desc_label.pack(side=tk.LEFT, padx=8)
+
     def show_results(self, functions):
         for widget in self.scroll_frame.winfo_children():
             widget.destroy()
@@ -714,8 +764,30 @@ class DetailPanel(tk.Frame):
                     padx=6, pady=2
                 ).pack(side=tk.LEFT, padx=3)
 
+        # === 官方文档链接 ===
+        if func.get("official_url"):
+            self._add_section(" 官方文档")
+            doc_url = func["official_url"]
+            doc_frame = tk.Frame(self.content_frame, bg=COLORS["panel_bg"])
+            doc_frame.pack(fill=tk.X, pady=(2, 10))
+            doc_btn = tk.Button(
+                doc_frame,
+                text=f"  查看 {func.get('library', '')} 官方文档  ",
+                font=FONTS["subheading"],
+                bg=COLORS["accent"], fg="#ffffff", relief=tk.FLAT,
+                cursor="hand2", padx=16, pady=8,
+                activebackground=COLORS["accent_hover"], activeforeground="#ffffff",
+                command=lambda u=doc_url: self._open_url(u)
+            )
+            doc_btn.pack(side=tk.LEFT)
+            self._add_hover(doc_btn, COLORS["accent"], COLORS["accent_hover"])
+
         # 滚动到顶部
         self.canvas.yview_moveto(0)
+
+    def _open_url(self, url):
+        import webbrowser
+        webbrowser.open(url)
 
     def _on_rel_click(self, name):
         if self.on_related_click:

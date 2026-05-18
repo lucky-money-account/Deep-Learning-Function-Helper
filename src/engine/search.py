@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+import webbrowser
 from collections import defaultdict
 from difflib import SequenceMatcher
 
@@ -55,6 +56,67 @@ def tokenize(text):
     return tokens
 
 
+def get_official_url(func):
+    """根据函数信息生成官方文档链接"""
+    lib = func.get("library", "")
+    module = func.get("module", "")
+    name = func.get("name", "")
+    full = func.get("full_name", "")
+
+    if lib == "PyTorch":
+        if module == "torch":
+            return f"https://pytorch.org/docs/stable/generated/torch.{name}.html"
+        elif module == "torch.nn":
+            return f"https://pytorch.org/docs/stable/generated/torch.nn.{name}.html"
+        elif module == "torch.nn.functional":
+            fname = full.replace("F.", "")
+            return f"https://pytorch.org/docs/stable/generated/torch.nn.functional.{fname}.html"
+        elif module == "torch.optim":
+            return f"https://pytorch.org/docs/stable/generated/torch.optim.{name}.html"
+        elif module == "torch.optim.lr_scheduler":
+            return f"https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.{name}.html"
+        elif module == "torch.utils.data":
+            return f"https://pytorch.org/docs/stable/data.html#torch.utils.data.{name}"
+        elif module == "torch.cuda":
+            return f"https://pytorch.org/docs/stable/generated/torch.cuda.{name}.html"
+        elif module == "torchvision.transforms":
+            return f"https://pytorch.org/vision/stable/generated/torchvision.transforms.{name}.html"
+        elif module == "torchvision.models":
+            return f"https://pytorch.org/vision/stable/models/generated/torchvision.models.{name}.html"
+        elif module == "Torch.Tensor":
+            return f"https://pytorch.org/docs/stable/generated/torch.Tensor.{name}.html"
+        return f"https://pytorch.org/docs/stable/search.html?q={name}"
+
+    elif lib == "NumPy":
+        return f"https://numpy.org/doc/stable/reference/generated/numpy.{name}.html"
+
+    elif lib == "Matplotlib":
+        return f"https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.{name}.html"
+
+    elif lib == "OpenCV":
+        return f"https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html"
+
+    elif lib == "Scikit-learn":
+        return f"https://scikit-learn.org/stable/modules/generated/sklearn.{module.split('.')[-1]}.{name}.html"
+
+    elif lib == "Pandas":
+        return f"https://pandas.pydata.org/docs/reference/api/pandas.{name}.html"
+
+    return f"https://www.google.com/search?q={name}+{lib}+documentation"
+
+
+LIBRARY_DOCS = [
+    {"name": "PyTorch", "url": "https://pytorch.org/docs/stable/", "icon": "torch", "desc": "核心 API、nn 模块、优化器"},
+    {"name": "NumPy", "url": "https://numpy.org/doc/stable/reference/", "icon": "np", "desc": "数组操作、数学函数、线性代数"},
+    {"name": "Matplotlib", "url": "https://matplotlib.org/stable/api/index", "icon": "plt", "desc": "绘图、可视化、图像显示"},
+    {"name": "OpenCV", "url": "https://docs.opencv.org/4.x/", "icon": "cv2", "desc": "图像处理、视频、GUI"},
+    {"name": "Scikit-learn", "url": "https://scikit-learn.org/stable/modules/classes.html", "icon": "sklearn", "desc": "机器学习、预处理、评估"},
+    {"name": "Pandas", "url": "https://pandas.pydata.org/docs/reference/index.html", "icon": "pd", "desc": "数据分析、DataFrame、I/O"},
+]
+
+LIBRARY_URLS = {d["name"]: d["url"] for d in LIBRARY_DOCS}
+
+
 class SearchEngine:
     def __init__(self):
         self.functions = []
@@ -68,6 +130,7 @@ class SearchEngine:
         with open(DB_PATH, "r", encoding="utf-8") as f:
             self.functions = json.load(f)
         for func in self.functions:
+            func["official_url"] = get_official_url(func)
             self.func_dict[func["id"]] = func
             self.func_dict[func["full_name"]] = func
             self.func_dict[func["name"]] = func
@@ -283,6 +346,16 @@ class SearchEngine:
         if categories:
             results = [f for f in results if any(c in categories for c in f.get("categories", []))]
         return results[:limit]
+
+    def get_library_doc_links(self, libraries=None):
+        """返回各库官方文档链接，用于搜索无结果时展示"""
+        if libraries:
+            return [d for d in LIBRARY_DOCS if d["name"] in libraries]
+        return LIBRARY_DOCS
+
+    def open_url(self, url):
+        """在浏览器中打开 URL"""
+        webbrowser.open(url)
 
     def get_libraries(self):
         return sorted(set(f.get("library", "") for f in self.functions))

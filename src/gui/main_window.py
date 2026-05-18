@@ -136,7 +136,11 @@ class MainWindow:
         selected_libs = self.filter_panel.get_selected_libraries()
         libs = None if not selected_libs else selected_libs
         results = self.engine.search(query, libraries=libs)
-        self.result_list.show_results(results)
+        if results:
+            self.result_list.show_results(results)
+        else:
+            doc_links = self.engine.get_library_doc_links(libraries=libs)
+            self.result_list.show_empty_with_links(query, doc_links, self.engine.open_url)
         self.status_label.config(
             text=f"  搜索: '{query}'  →  找到 {len(results)} 个结果  |  {', '.join(libs) if libs else '所有库'}"
         )
