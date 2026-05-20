@@ -495,6 +495,7 @@ class ScratchBuilder(tk.Frame):
                 fg=PIPE_COLORS["accent"], bg=PIPE_COLORS["palette_bg"]).pack(pady=12, anchor=tk.W)
 
         palette_canvas = tk.Canvas(palette, bg=PIPE_COLORS["palette_bg"], highlightthickness=0, width=200)
+        self.palette_canvas = palette_canvas
         palette_scroll = tk.Scrollbar(palette, orient=tk.VERTICAL, command=palette_canvas.yview)
         blocks_frame = tk.Frame(palette_canvas, bg=PIPE_COLORS["palette_bg"])
         palette_canvas.create_window((0, 0), window=blocks_frame, anchor=tk.NW, tags="inner")
@@ -502,10 +503,10 @@ class ScratchBuilder(tk.Frame):
         palette_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         palette_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         blocks_frame.bind("<Configure>", lambda e: palette_canvas.configure(scrollregion=palette_canvas.bbox("all")))
-        palette_canvas.bind("<MouseWheel>", lambda e: (palette_canvas.yview_scroll(int(-1*(e.delta/120)), "units"), "break")[1])
+        # 滚轮：画布内部用 return break 阻止冒泡，父级兜底覆盖非画布区域
+        palette_canvas.bind("<MouseWheel>", self._on_palette_wheel)
         palette_canvas.bind("<Enter>", lambda e: palette_canvas.focus_set())
-        # Also bind on palette frame
-        palette.bind("<MouseWheel>", lambda e: palette_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        palette.bind("<MouseWheel>", self._on_palette_wheel)
 
         sections = {"数据处理": "block_data", "模型层": "block_model", "损失函数": "block_loss", "优化器": "block_optim", "图像变换": "block_transform", "评估指标": "block_metric"}
         sec_colors = {v: k for k, v in sections.items()}
@@ -614,6 +615,10 @@ class ScratchBuilder(tk.Frame):
 
     def _on_scroll_wheel(self, event):
         self.build_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
+
+    def _on_palette_wheel(self, event):
+        self.palette_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         return "break"
 
     def _on_shift_wheel(self, event):
