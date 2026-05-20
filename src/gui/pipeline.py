@@ -283,6 +283,7 @@ class PipelineCanvas(tk.Canvas):
         self.bind("<MouseWheel>", self._on_wheel)
         self.bind("<Shift-MouseWheel>", self._on_shift_wheel)
         self.bind("<Enter>", lambda e: self.focus_set())
+        self.bind("<Configure>", lambda e: self.config(scrollregion=self.bbox("all")))
 
     def _on_wheel(self, event):
         self.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -592,8 +593,12 @@ class ScratchBuilder(tk.Frame):
         toolbar = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=52)
         toolbar.pack(fill=tk.X, side=tk.BOTTOM)
         toolbar.pack_propagate(False)
-        tk.Label(toolbar, text=f" 模块:{len(self.scratch_blocks)} 连线:{len(self.connections)}", font=FONT_SMALL,
+        tk.Label(toolbar, text=" 就绪", font=FONT_SMALL,
                 fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["panel_bg"]).pack(side=tk.LEFT, padx=12, pady=12)
+        self.toolbar_label = tk.Label(toolbar, text="", font=FONT_SMALL,
+                fg=PIPE_COLORS["accent"], bg=PIPE_COLORS["panel_bg"])
+        self.toolbar_label.pack(side=tk.LEFT, pady=12)
+        self._update_toolbar()
         gen_btn = tk.Button(toolbar, text=" 生成代码 ", font=FONT_BOLD,
                            bg=PIPE_COLORS["accent"], fg="#ffffff", relief=tk.FLAT,
                            cursor="hand2", padx=20, pady=8, activebackground="#2563eb",
@@ -623,14 +628,18 @@ class ScratchBuilder(tk.Frame):
 
     def _draw_grid(self):
         self.build_canvas.delete("grid")
-        w = int(self.build_canvas.winfo_width()) if self.build_canvas.winfo_width() > 1 else 2000
-        h = int(self.build_canvas.winfo_height()) if self.build_canvas.winfo_height() > 1 else 2000
+        bbox = self.build_canvas.bbox("all")
+        w = max(int(self.build_canvas.winfo_width() or 2000), int(bbox[2] + 200) if bbox else 2000)
+        h = max(int(self.build_canvas.winfo_height() or 2000), int(bbox[3] + 200) if bbox else 2000)
         for x in range(0, w, 40):
             self.build_canvas.create_line(x, 0, x, h, fill="#1a2530", tags="grid")
         for y in range(0, h, 40):
             self.build_canvas.create_line(0, y, w, y, fill="#1a2530", tags="grid")
 
     # ==================== 添加/删除模块 ====================
+    def _update_toolbar(self):
+        self.toolbar_label.config(text=f"模块: {len(self.scratch_blocks)}  连线: {len(self.connections)}")
+
     def _add_block(self, block_def):
         self.block_id_counter += 1
         bid = f"blk_{self.block_id_counter}"
@@ -658,7 +667,7 @@ class ScratchBuilder(tk.Frame):
         # 输入端口 (左侧圆) — 带标签 I
         port_in = self.build_canvas.create_oval(x - 6, y + 22, x + 6, y + 34,
             fill="#162032", outline="#64748b", width=2, tags=(bid, "port_in"))
-        self.build_canvas.create_text(x, y + 28, text="I", fill="#64748b",
+        self.build_canvas.create_text(x, y + 28, text="I", fill="#cbd5e1",
             font=("Consolas", 7, "bold"), tags=(bid, "port_in"))
         # 输出端口 (右侧圆) — 带标签 O
         port_out = self.build_canvas.create_oval(x + w - 6, y + 22, x + w + 6, y + 34,
@@ -668,6 +677,7 @@ class ScratchBuilder(tk.Frame):
 
         self.scratch_blocks.append({"id": bid, "def": block_def, "x": x, "y": y, "w": w, "h": h})
         self._ensure_scroll()
+        self._update_toolbar()
 
     def _clear(self):
         self.build_canvas.delete("all")
@@ -678,6 +688,7 @@ class ScratchBuilder(tk.Frame):
         self._wire_drag["active"] = False
         self.code_text.delete("1.0", tk.END)
         self._draw_grid()
+        self._update_toolbar()
 
     # ==================== 拖拽 + 连线 ====================
     def _on_canvas_click(self, event):
@@ -701,9 +712,6 @@ class ScratchBuilder(tk.Frame):
                         return
 
         # 检查是否点击了模块本身 (开始拖拽)
-        for blk in self.scratch_blocks:
-            if blk["id"] in (self.build_canvas.gettags(iid) for iid in items for t in self.build_canvas.gettags(iid)):
-                pass
         for iid in items:
             for blk in self.scratch_blocks:
                 if blk["id"] in self.build_canvas.gettags(iid):
@@ -787,6 +795,7 @@ class ScratchBuilder(tk.Frame):
             smooth=True, fill=PIPE_COLORS["accent"], width=2,
             arrow=tk.LAST, arrowshape=(8, 10, 4), tags="connection")
         self.connections.append((src_bid, dst_bid, line_id))
+        self._update_toolbar()
 
     def _redraw_connections(self):
         for conn in self.connections:
@@ -895,6 +904,7 @@ class ScratchBuilder(tk.Frame):
 
     def _ensure_scroll(self):
         self.build_canvas.config(scrollregion=self.build_canvas.bbox("all"))
+        self._draw_grid()
 
     def _bind_palette_scroll(self, container, target_canvas):
         def scroll(e):

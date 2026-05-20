@@ -3,8 +3,7 @@
 基于 tkinter 的现代化搜索界面
 """
 import tkinter as tk
-from tkinter import ttk, messagebox
-import webbrowser
+from tkinter import ttk
 
 from src.gui.components import (
     SearchBar, QuickAccessBar, FilterPanel,
@@ -178,10 +177,12 @@ class MainWindow:
             self.search_view.pack_forget()
             self.pipeline_view.pack(fill=tk.BOTH, expand=True)
             self.mode_btn.config(text="  返回搜索  ", bg=PIPE_COLORS["block_loss"])
+            self.status_label.config(text="  流程图 / Scratch 构建器  |  点击节点查看函数  |  拖拽连线构建代码")
         else:
             self.pipeline_view.pack_forget()
             self.search_view.pack(fill=tk.BOTH, expand=True)
             self.mode_btn.config(text="  流程图 & Scratch  ", bg=PIPE_COLORS["accent"])
+            self.status_label.config(text="  就绪  |  输入函数名或关键词搜索")
 
     def run(self):
         self.root.mainloop()

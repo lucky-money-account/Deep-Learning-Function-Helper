@@ -784,10 +784,11 @@ class DetailPanel(tk.Frame):
         ).pack(fill=tk.X, pady=(16, 6))
 
     def _add_text(self, text, color, pady=(4, 8)):
+        wl = max(400, getattr(self, '_canvas_width', 680) - 60)
         tk.Label(
             self.content_frame, text=f"  {text}",
             font=FONTS["normal"], fg=color, bg=COLORS["panel_bg"],
-            justify=tk.LEFT, wraplength=680, anchor=tk.W
+            justify=tk.LEFT, wraplength=wl, anchor=tk.W
         ).pack(fill=tk.X, pady=pady)
 
     def _add_code_block(self, code, pady=(2, 4)):
