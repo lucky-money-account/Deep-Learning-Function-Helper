@@ -502,6 +502,8 @@ class ScratchBuilder(tk.Frame):
         palette_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         palette_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         blocks_frame.bind("<Configure>", lambda e: palette_canvas.configure(scrollregion=palette_canvas.bbox("all")))
+        palette_canvas.bind("<MouseWheel>", lambda e: palette_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        palette_canvas.bind("<Enter>", lambda e: palette_canvas.focus_set())
 
         sections = {"数据处理": "block_data", "模型层": "block_model", "损失函数": "block_loss", "优化器": "block_optim", "图像变换": "block_transform", "评估指标": "block_metric"}
         sec_colors = {v: k for k, v in sections.items()}
@@ -516,16 +518,36 @@ class ScratchBuilder(tk.Frame):
             color_strip = tk.Frame(block_frame, bg=color, width=4, height=40)
             color_strip.pack(side=tk.LEFT, fill=tk.Y)
 
-            text_frame = tk.Frame(block_frame, bg=PIPE_COLORS["palette_bg"], cursor="hand2")
-            text_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=8, pady=6)
-            tk.Label(text_frame, text=block["name"], font=FONT_SMALL,
-                    fg=PIPE_COLORS["text"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W).pack()
-            tk.Label(text_frame, text=f"[{sec_name}]", font=("Microsoft YaHei UI", 7),
-                    fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W).pack()
+            # 添加按钮 (圆形)
+            add_btn = tk.Canvas(block_frame, bg=PIPE_COLORS["palette_bg"], width=28, height=40,
+                               highlightthickness=0, cursor="hand2")
+            add_btn.pack(side=tk.LEFT)
+            btn_cx, btn_cy = 14, 20
+            add_btn.create_oval(btn_cx-9, btn_cy-9, btn_cx+9, btn_cy+9,
+                               fill=color, outline="", tags="add")
+            add_btn.create_text(btn_cx, btn_cy, text="+",
+                               fill="#ffffff", font=("Consolas", 12, "bold"), tags="add")
+            add_btn.bind("<Button-1>", lambda e, b=block: self._add_scratch_block(b))
+            add_btn.bind("<Enter>", lambda e, a=add_btn: a.itemconfig("add", fill=PIPE_COLORS["accent"]))
+            add_btn.bind("<Leave>", lambda e, a=add_btn, c=color: a.itemconfig("add", fill=c))
 
-            text_frame.bind("<Button-1>", lambda e, b=block: self._add_scratch_block(b))
-            text_frame.bind("<Enter>", lambda e, f=text_frame, c=color: f.config(bg=PIPE_COLORS["node_header"]))
-            text_frame.bind("<Leave>", lambda e, f=text_frame: f.config(bg=PIPE_COLORS["palette_bg"]))
+            text_frame = tk.Frame(block_frame, bg=PIPE_COLORS["palette_bg"], cursor="hand2")
+            text_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(4, 8), pady=6)
+            name_lbl = tk.Label(text_frame, text=block["name"], font=FONT_SMALL,
+                    fg=PIPE_COLORS["text"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W, cursor="hand2")
+            name_lbl.pack()
+            cat_lbl = tk.Label(text_frame, text=f"[{sec_name}]", font=("Microsoft YaHei UI", 7),
+                    fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W, cursor="hand2")
+            cat_lbl.pack()
+
+            # 所有子控件都绑定点击
+            add_block = lambda e, b=block: self._add_scratch_block(b)
+            hover_on = lambda e, f=block_frame, c=color: f.config(bg=PIPE_COLORS["node_header"])
+            hover_off = lambda e, f=block_frame: f.config(bg=PIPE_COLORS["palette_bg"])
+            for w in (block_frame, text_frame, name_lbl, cat_lbl):
+                w.bind("<Button-1>", add_block)
+                w.bind("<Enter>", hover_on)
+                w.bind("<Leave>", hover_off)
 
         # 右侧：构建区域 + 代码生成
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
