@@ -503,10 +503,8 @@ class ScratchBuilder(tk.Frame):
         palette_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         palette_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         blocks_frame.bind("<Configure>", lambda e: palette_canvas.configure(scrollregion=palette_canvas.bbox("all")))
-        # 滚轮：画布内部用 return break 阻止冒泡，父级兜底覆盖非画布区域
-        palette_canvas.bind("<MouseWheel>", self._on_palette_wheel)
-        palette_canvas.bind("<Enter>", lambda e: palette_canvas.focus_set())
-        palette.bind("<MouseWheel>", self._on_palette_wheel)
+        # 在整个左侧面板区域都能滚轮滑动
+        self._bind_palette_scroll(palette, palette_canvas)
 
         sections = {"数据处理": "block_data", "模型层": "block_model", "损失函数": "block_loss", "优化器": "block_optim", "图像变换": "block_transform", "评估指标": "block_metric"}
         sec_colors = {v: k for k, v in sections.items()}
@@ -617,9 +615,19 @@ class ScratchBuilder(tk.Frame):
         self.build_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         return "break"
 
-    def _on_palette_wheel(self, event):
-        self.palette_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        return "break"
+    def _bind_palette_scroll(self, container, target_canvas):
+        """递归绑定滚轮：容器及其所有子控件滚轮都滚动 target_canvas"""
+        def scroll(e):
+            target_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+            return "break"
+        container.bind("<MouseWheel>", scroll)
+        container.bind("<Enter>", lambda e: target_canvas.focus_set())
+        for child in container.winfo_children():
+            if isinstance(child, tk.Canvas):
+                child.bind("<MouseWheel>", scroll)
+                child.bind("<Enter>", lambda e: target_canvas.focus_set())
+            elif isinstance(child, tk.Frame):
+                self._bind_palette_scroll(child, target_canvas)
 
     def _on_shift_wheel(self, event):
         self.build_canvas.xview_scroll(int(-1 * (event.delta / 120)), "units")
