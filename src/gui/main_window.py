@@ -11,6 +11,7 @@ from src.gui.components import (
     ResultList, DetailPanel, SuggestionPanel,
     COLORS, FONTS
 )
+from src.gui.pipeline import PipelineView, PIPE_COLORS
 
 
 class MainWindow:
@@ -55,6 +56,18 @@ class MainWindow:
             header, text="  深度学习查询助手",
             font=FONTS["title"], fg=COLORS["title_text"], bg=COLORS["header"]
         ).pack(side=tk.LEFT, padx=16, pady=10)
+
+        # 模式切换按钮
+        self.mode_btn = tk.Button(
+            header, text="  流程图 & Scratch  ",
+            font=("Microsoft YaHei UI", 10, "bold"),
+            bg=PIPE_COLORS["accent"], fg="#ffffff", relief=tk.FLAT, cursor="hand2",
+            padx=16, pady=6, activebackground="#2563eb",
+            command=self._toggle_pipeline_mode
+        )
+        self.mode_btn.pack(side=tk.RIGHT, padx=12, pady=10)
+        self._pipeline_mode = False
+
         tk.Label(
             header,
             text=f"已收录 {len(self.engine.functions)} 个函数  |  PyTorch · NumPy · Matplotlib · OpenCV · Sklearn · Pandas  ",
@@ -62,8 +75,18 @@ class MainWindow:
         ).pack(side=tk.RIGHT, padx=16, pady=10)
 
         # --- 主内容区 ---
+        # 搜索视图
+        self.search_view = tk.Frame(self.root, bg=COLORS["bg"])
+        self.search_view.pack(fill=tk.BOTH, expand=True)
+
+        # 流程图/Scratch 视图
+        self.pipeline_view = PipelineView(
+            self.root, self.engine,
+            on_show_detail=self._show_detail
+        )
+
         main_paned = tk.PanedWindow(
-            self.root, orient=tk.HORIZONTAL, bg=COLORS["border"],
+            self.search_view, orient=tk.HORIZONTAL, bg=COLORS["border"],
             sashwidth=3, sashpad=0
         )
         main_paned.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
@@ -164,6 +187,17 @@ class MainWindow:
         func = self.engine.get_by_id(func_id)
         if func:
             self._show_detail(func)
+
+    def _toggle_pipeline_mode(self):
+        self._pipeline_mode = not self._pipeline_mode
+        if self._pipeline_mode:
+            self.search_view.pack_forget()
+            self.pipeline_view.pack(fill=tk.BOTH, expand=True)
+            self.mode_btn.config(text="  返回搜索  ")
+        else:
+            self.pipeline_view.pack_forget()
+            self.search_view.pack(fill=tk.BOTH, expand=True)
+            self.mode_btn.config(text="  流程图 & Scratch  ")
 
     def run(self):
         self.root.mainloop()
