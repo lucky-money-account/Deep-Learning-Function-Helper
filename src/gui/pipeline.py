@@ -1,4 +1,4 @@
-"""
+﻿"""
 Pipeline Flowchart Builder - 深度学习流程图构建器
 支持: 内置架构模板展示 + Scratch 风格拖拽编程
 """
@@ -43,17 +43,17 @@ ARCHITECTURES = [
         "name": "CNN 图像分类前向传播",
         "desc": "经典的卷积神经网络前向传播流程: 输入→卷积→激活→池化→展平→全连接→输出",
         "nodes": [
-            {"id": "input", "x": 50, "y": 200, "w": 140, "h": 50, "label": "Input Image\n(B,C,H,W)", "color": "block_data"},
-            {"id": "conv", "x": 240, "y": 200, "w": 140, "h": 50, "label": "nn.Conv2d\n(3→64, k=3, p=1)", "color": "block_model"},
-            {"id": "relu", "x": 430, "y": 200, "w": 120, "h": 50, "label": "F.relu\nReLU激活", "color": "block_model"},
-            {"id": "pool", "x": 600, "y": 200, "w": 140, "h": 50, "label": "nn.MaxPool2d\n(k=2, s=2)", "color": "block_model"},
-            {"id": "conv2", "x": 240, "y": 300, "w": 140, "h": 50, "label": "nn.Conv2d\n(64→128, k=3)", "color": "block_model"},
-            {"id": "relu2", "x": 430, "y": 300, "w": 120, "h": 50, "label": "F.relu\nReLU激活", "color": "block_model"},
-            {"id": "pool2", "x": 600, "y": 300, "w": 140, "h": 50, "label": "nn.MaxPool2d\n(k=2, s=2)", "color": "block_model"},
-            {"id": "flatten", "x": 790, "y": 250, "w": 130, "h": 50, "label": "torch.flatten\n展平", "color": "block_transform"},
-            {"id": "fc1", "x": 970, "y": 250, "w": 130, "h": 50, "label": "nn.Linear\n(128*8*8→256)", "color": "block_model"},
-            {"id": "fc2", "x": 1150, "y": 250, "w": 130, "h": 50, "label": "nn.Linear\n(256→10)", "color": "block_model"},
-            {"id": "output", "x": 1330, "y": 250, "w": 130, "h": 50, "label": "Output\n(Class Logits)", "color": "block_metric"},
+            {"id": "input", "x": 50, "y": 200, "w": 140, "h": 60, "label": "Input Image\n(B,C,H,W)", "color": "block_data"},
+            {"id": "conv", "x": 240, "y": 200, "w": 140, "h": 60, "label": "nn.Conv2d\n(3->64, k=3, p=1)", "color": "block_model"},
+            {"id": "relu", "x": 430, "y": 200, "w": 120, "h": 60, "label": "F.relu\nReLU激活", "color": "block_model"},
+            {"id": "pool", "x": 600, "y": 200, "w": 140, "h": 60, "label": "nn.MaxPool2d\n(k=2, s=2)", "color": "block_model"},
+            {"id": "conv2", "x": 240, "y": 310, "w": 140, "h": 60, "label": "nn.Conv2d\n(64->128, k=3)", "color": "block_model"},
+            {"id": "relu2", "x": 430, "y": 310, "w": 120, "h": 60, "label": "F.relu\nReLU激活", "color": "block_model"},
+            {"id": "pool2", "x": 600, "y": 310, "w": 140, "h": 60, "label": "nn.MaxPool2d\n(k=2, s=2)", "color": "block_model"},
+            {"id": "flatten", "x": 790, "y": 255, "w": 130, "h": 60, "label": "torch.flatten\n展平", "color": "block_transform"},
+            {"id": "fc1", "x": 970, "y": 255, "w": 140, "h": 60, "label": "nn.Linear\n(128*8*8->256)", "color": "block_model"},
+            {"id": "fc2", "x": 1160, "y": 255, "w": 130, "h": 60, "label": "nn.Linear\n(256->10)", "color": "block_model"},
+            {"id": "output", "x": 1340, "y": 255, "w": 130, "h": 60, "label": "Output\n(Class Logits)", "color": "block_metric"},
         ],
         "edges": [
             ("input","conv"),("conv","relu"),("relu","pool"),
@@ -85,16 +85,16 @@ class SimpleCNN(nn.Module):
         "name": "训练循环 (Training Loop)",
         "desc": "标准 PyTorch 训练循环: 前向→损失→反向→优化 的完整流程",
         "nodes": [
-            {"id": "data", "x": 50, "y": 150, "w": 150, "h": 50, "label": "DataLoader\n(batch_size=64)", "color": "block_data"},
-            {"id": "data_iter", "x": 250, "y": 150, "w": 120, "h": 50, "label": "for x, y\nin loader:", "color": "block_transform"},
-            {"id": "zero_grad", "x": 430, "y": 100, "w": 130, "h": 50, "label": "optimizer.\nzero_grad()", "color": "block_optim"},
-            {"id": "forward", "x": 610, "y": 100, "w": 130, "h": 50, "label": "model(x)\n前向传播", "color": "block_model"},
-            {"id": "loss", "x": 790, "y": 100, "w": 140, "h": 50, "label": "criterion\n(output, y)", "color": "block_loss"},
-            {"id": "backward", "x": 980, "y": 100, "w": 130, "h": 50, "label": "loss.\nbackward()", "color": "block_optim"},
-            {"id": "step", "x": 1160, "y": 100, "w": 130, "h": 50, "label": "optimizer.\nstep()", "color": "block_optim"},
-            {"id": "epoch", "x": 50, "y": 250, "w": 150, "h": 50, "label": "for epoch in\nrange(N):", "color": "block_transform"},
-            {"id": "val", "x": 250, "y": 250, "w": 140, "h": 50, "label": "torch.no_grad()\n验证评估", "color": "block_metric"},
-            {"id": "schedule", "x": 440, "y": 250, "w": 150, "h": 50, "label": "scheduler.\nstep()", "color": "block_optim"},
+            {"id": "data", "x": 50, "y": 150, "w": 150, "h": 60, "label": "DataLoader\n(batch_size=64)", "color": "block_data"},
+            {"id": "data_iter", "x": 250, "y": 150, "w": 120, "h": 60, "label": "for x, y\nin loader:", "color": "block_transform"},
+            {"id": "zero_grad", "x": 430, "y": 100, "w": 130, "h": 60, "label": "optimizer.\nzero_grad()", "color": "block_optim"},
+            {"id": "forward", "x": 610, "y": 100, "w": 130, "h": 60, "label": "model(x)\n前向传播", "color": "block_model"},
+            {"id": "loss", "x": 790, "y": 100, "w": 140, "h": 60, "label": "criterion\n(output, y)", "color": "block_loss"},
+            {"id": "backward", "x": 980, "y": 100, "w": 130, "h": 60, "label": "loss.\nbackward()", "color": "block_optim"},
+            {"id": "step", "x": 1160, "y": 100, "w": 130, "h": 60, "label": "optimizer.\nstep()", "color": "block_optim"},
+            {"id": "epoch", "x": 50, "y": 250, "w": 150, "h": 60, "label": "for epoch in\nrange(N):", "color": "block_transform"},
+            {"id": "val", "x": 250, "y": 250, "w": 140, "h": 60, "label": "torch.no_grad()\n验证评估", "color": "block_metric"},
+            {"id": "schedule", "x": 440, "y": 250, "w": 150, "h": 60, "label": "scheduler.\nstep()", "color": "block_optim"},
         ],
         "edges": [
             ("data","data_iter"),("data_iter","zero_grad"),
@@ -125,13 +125,13 @@ for epoch in range(num_epochs):
         "name": "数据预处理流水线",
         "desc": "图像数据从读取到送入模型的完整预处理流程",
         "nodes": [
-            {"id": "read", "x": 50, "y": 200, "w": 130, "h": 50, "label": "cv2.imread\n读取图像", "color": "block_data"},
-            {"id": "bgr2rgb", "x": 230, "y": 200, "w": 140, "h": 50, "label": "cv2.cvtColor\nBGR→RGB", "color": "block_transform"},
-            {"id": "resize", "x": 420, "y": 200, "w": 140, "h": 50, "label": "transforms.Resize\n(224,224)", "color": "block_transform"},
-            {"id": "totensor", "x": 610, "y": 200, "w": 140, "h": 50, "label": "transforms.\nToTensor()", "color": "block_transform"},
-            {"id": "normalize", "x": 800, "y": 200, "w": 150, "h": 50, "label": "transforms.\nNormalize(mean,std)", "color": "block_transform"},
-            {"id": "batch", "x": 1000, "y": 200, "w": 140, "h": 50, "label": "DataLoader\nBatch包装", "color": "block_data"},
-            {"id": "model", "x": 1190, "y": 200, "w": 130, "h": 50, "label": "Model\n模型推理", "color": "block_model"},
+            {"id": "read", "x": 50, "y": 200, "w": 130, "h": 60, "label": "cv2.imread\n读取图像", "color": "block_data"},
+            {"id": "bgr2rgb", "x": 230, "y": 200, "w": 140, "h": 60, "label": "cv2.cvtColor\nBGR→RGB", "color": "block_transform"},
+            {"id": "resize", "x": 420, "y": 200, "w": 140, "h": 60, "label": "transforms.Resize\n(224,224)", "color": "block_transform"},
+            {"id": "totensor", "x": 610, "y": 200, "w": 140, "h": 60, "label": "transforms.\nToTensor()", "color": "block_transform"},
+            {"id": "normalize", "x": 800, "y": 200, "w": 150, "h": 60, "label": "transforms.\nNormalize(mean,std)", "color": "block_transform"},
+            {"id": "batch", "x": 1000, "y": 200, "w": 140, "h": 60, "label": "DataLoader\nBatch包装", "color": "block_data"},
+            {"id": "model", "x": 1190, "y": 200, "w": 130, "h": 60, "label": "Model\n模型推理", "color": "block_model"},
         ],
         "edges": [
             ("read","bgr2rgb"),("bgr2rgb","resize"),("resize","totensor"),
@@ -157,12 +157,12 @@ tensor = tensor.unsqueeze(0)'''
         "name": "迁移学习 (Transfer Learning)",
         "desc": "加载预训练模型→替换分类头→冻结特征层→微调",
         "nodes": [
-            {"id": "load", "x": 50, "y": 200, "w": 150, "h": 50, "label": "resnet18\n(pretrained=True)", "color": "block_model"},
-            {"id": "freeze", "x": 260, "y": 200, "w": 140, "h": 50, "label": "Freeze params\nrequires_grad=False", "color": "block_optim"},
-            {"id": "replace", "x": 460, "y": 200, "w": 150, "h": 50, "label": "Replace FC\nnn.Linear(512,N)", "color": "block_model"},
-            {"id": "train", "x": 670, "y": 200, "w": 140, "h": 50, "label": "Train new FC\noptim.AdamW", "color": "block_optim"},
-            {"id": "unfreeze", "x": 870, "y": 200, "w": 140, "h": 50, "label": "Unfreeze all\nFine-tune", "color": "block_optim"},
-            {"id": "finetune", "x": 1070, "y": 200, "w": 140, "h": 50, "label": "Lower LR\nContinue train", "color": "block_optim"},
+            {"id": "load", "x": 50, "y": 200, "w": 150, "h": 60, "label": "resnet18\n(pretrained=True)", "color": "block_model"},
+            {"id": "freeze", "x": 260, "y": 200, "w": 140, "h": 60, "label": "Freeze params\nrequires_grad=False", "color": "block_optim"},
+            {"id": "replace", "x": 460, "y": 200, "w": 150, "h": 60, "label": "Replace FC\nnn.Linear(512,N)", "color": "block_model"},
+            {"id": "train", "x": 670, "y": 200, "w": 140, "h": 60, "label": "Train new FC\noptim.AdamW", "color": "block_optim"},
+            {"id": "unfreeze", "x": 870, "y": 200, "w": 140, "h": 60, "label": "Unfreeze all\nFine-tune", "color": "block_optim"},
+            {"id": "finetune", "x": 1070, "y": 200, "w": 140, "h": 60, "label": "Lower LR\nContinue train", "color": "block_optim"},
         ],
         "edges": [
             ("load","freeze"),("freeze","replace"),("replace","train"),
@@ -188,13 +188,13 @@ optimizer = optim.AdamW(model.parameters(), lr=1e-4)
         "name": "分类评估流程",
         "desc": "模型输出→argmax→与标签对比→计算准确率/F1/混淆矩阵",
         "nodes": [
-            {"id": "logits", "x": 50, "y": 200, "w": 140, "h": 50, "label": "Model Output\n(Logits)", "color": "block_model"},
-            {"id": "argmax", "x": 250, "y": 200, "w": 130, "h": 50, "label": "torch.argmax\n(dim=1)", "color": "block_transform"},
-            {"id": "compare", "x": 440, "y": 170, "w": 140, "h": 50, "label": "Compare\npred vs label", "color": "block_metric"},
-            {"id": "accuracy", "x": 640, "y": 150, "w": 140, "h": 50, "label": "accuracy_score\n准确率", "color": "block_metric"},
-            {"id": "f1", "x": 640, "y": 220, "w": 140, "h": 50, "label": "f1_score\nF1分数", "color": "block_metric"},
-            {"id": "cm", "x": 840, "y": 185, "w": 150, "h": 50, "label": "confusion_matrix\n混淆矩阵", "color": "block_metric"},
-            {"id": "report", "x": 1040, "y": 185, "w": 150, "h": 50, "label": "classification_report\n分类报告", "color": "block_metric"},
+            {"id": "logits", "x": 50, "y": 200, "w": 140, "h": 60, "label": "Model Output\n(Logits)", "color": "block_model"},
+            {"id": "argmax", "x": 250, "y": 200, "w": 130, "h": 60, "label": "torch.argmax\n(dim=1)", "color": "block_transform"},
+            {"id": "compare", "x": 440, "y": 170, "w": 140, "h": 60, "label": "Compare\npred vs label", "color": "block_metric"},
+            {"id": "accuracy", "x": 640, "y": 150, "w": 140, "h": 60, "label": "accuracy_score\n准确率", "color": "block_metric"},
+            {"id": "f1", "x": 640, "y": 220, "w": 140, "h": 60, "label": "f1_score\nF1分数", "color": "block_metric"},
+            {"id": "cm", "x": 840, "y": 185, "w": 150, "h": 60, "label": "confusion_matrix\n混淆矩阵", "color": "block_metric"},
+            {"id": "report", "x": 1040, "y": 185, "w": 150, "h": 60, "label": "classification_report\n分类报告", "color": "block_metric"},
         ],
         "edges": [
             ("logits","argmax"),("argmax","compare"),
@@ -304,43 +304,86 @@ class PipelineCanvas(tk.Canvas):
 
         self.config(scrollregion=self.bbox("all"))
 
+    def _draw_rounded_rect(self, x, y, w, h, r, **kw):
+        points = [
+            x + r, y, x + w - r, y,
+            x + w, y, x + w, y + r,
+            x + w, y + h - r, x + w, y + h,
+            x + w - r, y + h, x + r, y + h,
+            x, y + h, x, y + h - r,
+            x, y + r, x, y
+        ]
+        return self.create_polygon(points, smooth=True, **kw)
+
     def _draw_node(self, node):
         x, y, w, h = node["x"], node["y"], node["w"], node["h"]
         color = PIPE_COLORS.get(node["color"], PIPE_COLORS["accent"])
+        tags = ("node", node["id"])
 
-        # 节点主体
-        node_id = self.create_rectangle(
-            x, y, x + w, y + h,
-            fill="#1e293b", outline=color, width=2,
-            tags=("node", node["id"])
-        )
-        # 顶部颜色条
-        self.create_rectangle(
-            x, y, x + w, y + 28,
-            fill=color, outline="", tags=("node", node["id"])
-        )
-        # 标签
-        text_id = self.create_text(
-            x + w / 2, y + h / 2 + 8,
-            text=node["label"], fill=PIPE_COLORS["text"],
-            font=FONT_SMALL, tags=("node", node["id"]),
-            width=w - 12
-        )
-        # 函数图标
-        self.create_text(
-            x + w / 2, y + 14,
-            text="◆", fill="#ffffff", font=("", 8),
-            tags=("node", node["id"])
-        )
-        self.nodes[node["id"]] = {"rect": node_id, "text": text_id, "data": node}
+        # 阴影
+        self._draw_rounded_rect(x + 3, y + 3, w, h, 8,
+            fill="#0a0e17", outline="", tags=tags, stipple="gray25")
+
+        # 主体背景
+        self._draw_rounded_rect(x, y, w, h, 10,
+            fill="#162032", outline=color, width=2, tags=tags)
+
+        # 头部渐变条
+        for i in range(24):
+            alpha = 1.0 - i / 28.0
+            r_c = int(int(color[1:3], 16) * alpha + int("16", 16) * (1 - alpha))
+            g_c = int(int(color[3:5], 16) * alpha + int("20", 16) * (1 - alpha))
+            b_c = int(int(color[5:7], 16) * alpha + int("32", 16) * (1 - alpha))
+            shade = f"#{r_c:02x}{g_c:02x}{b_c:02x}"
+            self._draw_rounded_rect(x + 1, y + i, w - 2, 2, 0,
+                fill=shade, outline="", tags=tags)
+
+        # 头部颜色条
+        head_h = 26
+        self._draw_rounded_rect(x, y, w, head_h, 8,
+            fill=color, outline="", tags=tags)
+        # 底部补齐直角
+        self.create_rectangle(x, y + head_h - 8, x + w, y + head_h,
+            fill=color, outline="", tags=tags)
+
+        # 类目图标
+        icon_map = {"block_data": "D", "block_model": "M", "block_loss": "L",
+                     "block_optim": "O", "block_transform": "T", "block_metric": "E"}
+        icon_text = icon_map.get(node["color"], "◆")
+        self.create_text(x + 14, y + head_h / 2,
+            text=icon_text, fill="#ffffff", font=("Consolas", 10, "bold"), tags=tags)
+
+        # 标题
+        lines = node["label"].split("\n")
+        self.create_text(x + w / 2 + 4, y + head_h / 2,
+            text=lines[0], fill="#ffffff", font=FONT_SMALL, tags=tags)
+
+        # 副标题
+        if len(lines) > 1:
+            sub_lines = "\n".join(lines[1:])
+            self.create_text(x + w / 2, y + head_h + (h - head_h) / 2 + 2,
+                text=sub_lines, fill="#94a3b8",
+                font=("Microsoft YaHei UI", 7), tags=tags, width=w - 20)
+
+        # 输入端口 (左侧)
+        self.create_oval(x - 5, y + h / 2 - 5, x + 5, y + h / 2 + 5,
+            fill="#162032", outline=color, width=2, tags=tags + ("port_in",))
+        # 输出端口 (右侧)
+        self.create_oval(x + w - 5, y + h / 2 - 5, x + w + 5, y + h / 2 + 5,
+            fill=color, outline=color, width=2, tags=tags + ("port_out",))
+
+        self.nodes[node["id"]] = {"data": node}
 
     def _draw_edge(self, src, dst):
-        x1 = src["x"] + src["w"]
+        x1 = src["x"] + src["w"] + 5
         y1 = src["y"] + src["h"] / 2
-        x2 = dst["x"]
+        x2 = dst["x"] - 5
         y2 = dst["y"] + dst["h"] / 2
+        # 贝塞尔风格折线
+        mx = (x1 + x2) / 2
+        points = [x1, y1, mx, y1, mx, y2, x2, y2]
         line_id = self.create_line(
-            x1, y1, x2, y2,
+            *points, smooth=True,
             fill=PIPE_COLORS["link_line"], width=2,
             arrow=tk.LAST, arrowshape=(10, 12, 5),
             tags=("edge", f"e_{src['id']}_{dst['id']}")
@@ -538,22 +581,37 @@ class ScratchBuilder(tk.Frame):
         row = (self.block_id_counter - 1) // 3
         x = 30 + col * 240
         y = 30 + row * 80
+        w, h = 210, 58
 
+        # 阴影
+        self.build_canvas.create_rectangle(x + 2, y + 2, x + w + 2, y + h + 2,
+            fill="#0a0e17", outline="", tags=(bid, "scratch_block"), stipple="gray25")
         # 主体
-        self.build_canvas.create_rectangle(x, y, x + 210, y + 56, fill="#1e293b", outline=color, width=2, tags=(bid, "scratch_block"))
-        # 颜色条
-        self.build_canvas.create_rectangle(x, y, x + 210, y + 22, fill=color, outline="", tags=(bid, "scratch_block"))
+        self.build_canvas.create_rectangle(x, y, x + w, y + h,
+            fill="#162032", outline=color, width=2, tags=(bid, "scratch_block"))
+        # 头部条
+        self.build_canvas.create_rectangle(x, y, x + w, y + 24,
+            fill=color, outline="", tags=(bid, "scratch_block"))
+        # 图标
+        icons = {"block_data": "D", "block_model": "M", "block_loss": "L",
+                 "block_optim": "O", "block_transform": "T", "block_metric": "E"}
+        self.build_canvas.create_text(x + 14, y + 12,
+            text=icons.get(block_def["color"], "?"),
+            fill="#ffffff", font=("Consolas", 10, "bold"), tags=(bid, "scratch_block"))
         # 名称
-        self.build_canvas.create_text(x + 105, y + 11, text=block_def["name"], fill="#ffffff", font=FONT_SMALL, tags=(bid, "scratch_block"))
+        self.build_canvas.create_text(x + w / 2 + 6, y + 12,
+            text=block_def["name"], fill="#ffffff", font=FONT_SMALL, tags=(bid, "scratch_block"))
         # 模板
-        self.build_canvas.create_text(x + 105, y + 39, text=block_def.get("template", "")[:32],
-                                       fill=PIPE_COLORS["muted"], font=("Consolas", 7), tags=(bid, "scratch_block"))
-        # 输入端口 (左)
-        self.build_canvas.create_oval(x - 5, y + 23, x + 5, y + 33, fill=PIPE_COLORS["port_active"], outline="", tags=(bid, "port_in"))
-        # 输出端口 (右)
-        self.build_canvas.create_oval(x + 205, y + 23, x + 215, y + 33, fill=PIPE_COLORS["port_active"], outline="", tags=(bid, "port_out"))
+        self.build_canvas.create_text(x + w / 2, y + 41,
+            text=block_def.get("template", "")[:30],
+            fill="#94a3b8", font=("Consolas", 7), tags=(bid, "scratch_block"))
+        # 端口
+        self.build_canvas.create_oval(x - 5, y + 28, x + 5, y + 38,
+            fill="#162032", outline=color, width=2, tags=(bid, "port_in"))
+        self.build_canvas.create_oval(x + w - 5, y + 28, x + w + 5, y + 38,
+            fill=color, outline=color, width=2, tags=(bid, "port_out"))
 
-        self.scratch_blocks.append({"id": bid, "def": block_def, "x": x, "y": y, "w": 210, "h": 56})
+        self.scratch_blocks.append({"id": bid, "def": block_def, "x": x, "y": y, "w": w, "h": h})
         self._ensure_scroll()
 
     def _on_canvas_click(self, event):
@@ -695,7 +753,7 @@ class PipelineView(tk.Frame):
         self.canvas = PipelineCanvas(
             self.arch_canvas_frame,
             on_node_click=self._on_arch_node_click,
-            scrollregion=(0, 0, 1600, 400)
+            scrollregion=(0, 0, 1600, 500)
         )
         h_scroll = tk.Scrollbar(self.arch_canvas_frame, orient=tk.HORIZONTAL, command=self.canvas.xview)
         v_scroll = tk.Scrollbar(self.arch_canvas_frame, orient=tk.VERTICAL, command=self.canvas.yview)
