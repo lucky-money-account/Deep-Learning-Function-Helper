@@ -282,9 +282,11 @@ class PipelineCanvas(tk.Canvas):
         self.bind("<B1-Motion>", self._on_drag)
         self.bind("<ButtonRelease-1>", self._on_release)
         self.bind("<MouseWheel>", self._on_wheel)
+        self.bind("<Enter>", lambda e: self.focus_set())
 
     def _on_wheel(self, event):
-        self.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        if self.yview() != (0.0, 1.0):
+            self.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def draw_architecture(self, arch):
         """绘制内置架构模板"""
@@ -368,10 +370,19 @@ class PipelineCanvas(tk.Canvas):
     def _on_click(self, event):
         cx = self.canvasx(event.x)
         cy = self.canvasy(event.y)
-        item = self.find_closest(cx, cy)
-        tags = self.gettags(item[0]) if item else ()
-        if "node" in tags:
-            node_id = [t for t in tags if t != "node" and t != "current" and not t.startswith("e_")][0]
+        # 用 find_overlapping 获取点击位置的所有项（比 find_closest 更准确）
+        items = self.find_overlapping(cx - 2, cy - 2, cx + 2, cy + 2)
+        if not items:
+            items = self.find_closest(cx, cy)
+        node_id = None
+        for iid in items:
+            for t in self.gettags(iid):
+                if t and t != "node" and t != "current" and not t.startswith("e_") and not t.startswith("port_") and t != "edge" and t != "scratch_block":
+                    node_id = t
+                    break
+            if node_id:
+                break
+        if node_id and node_id in self.nodes:
             self._drag_data["id"] = node_id
             self._drag_data["ox"] = cx
             self._drag_data["oy"] = cy
@@ -694,6 +705,10 @@ class PipelineView(tk.Frame):
         h_scroll.grid(row=1, column=0, sticky="ew")
         self.arch_canvas_frame.grid_rowconfigure(0, weight=1)
         self.arch_canvas_frame.grid_columnconfigure(0, weight=1)
+
+        # 父容器也绑定滚轮，保证在滚动条上方也能滚动
+        self.arch_canvas_frame.bind("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        self.arch_frame.bind("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
 
         # 相关函数按钮
         self.func_bar = tk.Frame(self.arch_frame, bg=PIPE_COLORS["panel_bg"])
