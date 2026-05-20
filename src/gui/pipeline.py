@@ -366,13 +366,15 @@ class PipelineCanvas(tk.Canvas):
                     self._draw_edge(src, dst)
 
     def _on_click(self, event):
-        item = self.find_closest(self.canvasx(event.x), self.canvasy(event.y))
+        cx = self.canvasx(event.x)
+        cy = self.canvasy(event.y)
+        item = self.find_closest(cx, cy)
         tags = self.gettags(item[0]) if item else ()
         if "node" in tags:
             node_id = [t for t in tags if t != "node" and t != "current" and not t.startswith("e_")][0]
             self._drag_data["id"] = node_id
-            self._drag_data["ox"] = event.x
-            self._drag_data["oy"] = event.y
+            self._drag_data["ox"] = cx
+            self._drag_data["oy"] = cy
             # 高亮选中节点
             self.itemconfig("node", outline=PIPE_COLORS["port_bg"])
             for tid in self.find_withtag(node_id):
@@ -383,19 +385,25 @@ class PipelineCanvas(tk.Canvas):
 
     def _on_drag(self, event):
         node_id = self._drag_data.get("id")
-        if node_id and node_id in self.nodes:
-            dx = event.x - self._drag_data["ox"]
-            dy = event.y - self._drag_data["oy"]
-            # 移动节点所有子项
-            for tid in self.find_withtag(node_id):
-                self.move(tid, dx, dy)
-            # 更新节点数据
-            self.nodes[node_id]["data"]["x"] += dx
-            self.nodes[node_id]["data"]["y"] += dy
-            # 重绘连接的边
-            self._redraw_edges_for(node_id)
-            self._drag_data["ox"] = event.x
-            self._drag_data["oy"] = event.y
+        if not node_id or node_id not in self.nodes:
+            return
+        cx = self.canvasx(event.x)
+        cy = self.canvasy(event.y)
+        dx = cx - self._drag_data["ox"]
+        dy = cy - self._drag_data["oy"]
+        if abs(dx) < 1 and abs(dy) < 1:
+            return
+        # 移动节点所有子项
+        for tid in self.find_withtag(node_id):
+            self.move(tid, dx, dy)
+        # 更新节点数据
+        self.nodes[node_id]["data"]["x"] += dx
+        self.nodes[node_id]["data"]["y"] += dy
+        # 重绘连接的边
+        self._redraw_edges_for(node_id)
+        self._drag_data["ox"] = cx
+        self._drag_data["oy"] = cy
+        self.config(scrollregion=self.bbox("all"))
 
     def _on_release(self, event):
         self._drag_data["id"] = None
@@ -538,24 +546,28 @@ class ScratchBuilder(tk.Frame):
         self._ensure_scroll()
 
     def _on_canvas_click(self, event):
-        x = self.build_canvas.canvasx(event.x)
-        y = self.build_canvas.canvasy(event.y)
-        item = self.build_canvas.find_closest(x, y)
+        cx = self.build_canvas.canvasx(event.x)
+        cy = self.build_canvas.canvasy(event.y)
+        item = self.build_canvas.find_closest(cx, cy)
         if item:
             tags = self.build_canvas.gettags(item[0])
             for blk in self.scratch_blocks:
                 if blk["id"] in tags:
                     self._drag_data["id"] = blk["id"]
-                    self._drag_data["ox"] = event.x
-                    self._drag_data["oy"] = event.y
+                    self._drag_data["ox"] = cx
+                    self._drag_data["oy"] = cy
                     return
 
     def _on_canvas_drag(self, event):
         bid = self._drag_data.get("id")
         if not bid:
             return
-        dx = event.x - self._drag_data["ox"]
-        dy = event.y - self._drag_data["oy"]
+        cx = self.build_canvas.canvasx(event.x)
+        cy = self.build_canvas.canvasy(event.y)
+        dx = cx - self._drag_data["ox"]
+        dy = cy - self._drag_data["oy"]
+        if abs(dx) < 1 and abs(dy) < 1:
+            return
         for tid in self.build_canvas.find_withtag(bid):
             self.build_canvas.move(tid, dx, dy)
         for blk in self.scratch_blocks:
@@ -563,8 +575,9 @@ class ScratchBuilder(tk.Frame):
                 blk["x"] += dx
                 blk["y"] += dy
                 break
-        self._drag_data["ox"] = event.x
-        self._drag_data["oy"] = event.y
+        self._drag_data["ox"] = cx
+        self._drag_data["oy"] = cy
+        self._ensure_scroll()
 
     def _on_canvas_release(self, event):
         self._drag_data["id"] = None
@@ -673,10 +686,14 @@ class PipelineView(tk.Frame):
             on_node_click=self._on_arch_node_click,
             scrollregion=(0, 0, 1600, 400)
         )
-        x_scroll = tk.Scrollbar(self.arch_canvas_frame, orient=tk.HORIZONTAL, command=self.canvas.xview)
-        self.canvas.configure(xscrollcommand=x_scroll.set)
-        self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+        h_scroll = tk.Scrollbar(self.arch_canvas_frame, orient=tk.HORIZONTAL, command=self.canvas.xview)
+        v_scroll = tk.Scrollbar(self.arch_canvas_frame, orient=tk.VERTICAL, command=self.canvas.yview)
+        self.canvas.configure(xscrollcommand=h_scroll.set, yscrollcommand=v_scroll.set)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+        v_scroll.grid(row=0, column=1, sticky="ns")
+        h_scroll.grid(row=1, column=0, sticky="ew")
+        self.arch_canvas_frame.grid_rowconfigure(0, weight=1)
+        self.arch_canvas_frame.grid_columnconfigure(0, weight=1)
 
         # 相关函数按钮
         self.func_bar = tk.Frame(self.arch_frame, bg=PIPE_COLORS["panel_bg"])
