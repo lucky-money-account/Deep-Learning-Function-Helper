@@ -477,16 +477,18 @@ class PipelineCanvas(tk.Canvas):
 
 
 class ScratchBuilder(tk.Frame):
-    """Scratch 风格：拖拽函数块 → 拼接形成代码"""
+    """Unity 风格可视化编程：端口拖拽连线 + 代码生成"""
     def __init__(self, parent, **kw):
         super().__init__(parent, bg=PIPE_COLORS["bg"], **kw)
         self.scratch_blocks = []
+        self.connections = []  # (src_bid, dst_bid, line_id)
         self.block_id_counter = 0
         self._drag_data = {"id": None, "ox": 0, "oy": 0}
+        self._wire_drag = {"active": False, "from_bid": None, "ox": 0, "oy": 0, "temp_line": None}
         self._build()
 
     def _build(self):
-        # 左侧：函数块面板
+        # 左侧：函数块面板 (保持不变)
         palette = tk.Frame(self, bg=PIPE_COLORS["palette_bg"], width=220)
         palette.pack(side=tk.LEFT, fill=tk.Y)
         palette.pack_propagate(False)
@@ -503,35 +505,27 @@ class ScratchBuilder(tk.Frame):
         palette_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         palette_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         blocks_frame.bind("<Configure>", lambda e: palette_canvas.configure(scrollregion=palette_canvas.bbox("all")))
-        # 在整个左侧面板区域都能滚轮滑动
         self._bind_palette_scroll(palette, palette_canvas)
 
-        sections = {"数据处理": "block_data", "模型层": "block_model", "损失函数": "block_loss", "优化器": "block_optim", "图像变换": "block_transform", "评估指标": "block_metric"}
+        sections = {"数据处理": "block_data", "模型层": "block_model", "损失函数": "block_loss",
+                     "优化器": "block_optim", "图像变换": "block_transform", "评估指标": "block_metric"}
         sec_colors = {v: k for k, v in sections.items()}
 
         for block in DRAGGABLE_BLOCKS:
             color = PIPE_COLORS.get(block["color"], PIPE_COLORS["accent"])
             sec_name = sec_colors.get(block["color"], block["color"])
-
             block_frame = tk.Frame(blocks_frame, bg=PIPE_COLORS["palette_bg"])
             block_frame.pack(fill=tk.X, pady=1, padx=4)
-
             color_strip = tk.Frame(block_frame, bg=color, width=4, height=40)
             color_strip.pack(side=tk.LEFT, fill=tk.Y)
-
-            # 添加按钮 (圆形)
             add_btn = tk.Canvas(block_frame, bg=PIPE_COLORS["palette_bg"], width=28, height=40,
                                highlightthickness=0, cursor="hand2")
             add_btn.pack(side=tk.LEFT)
-            btn_cx, btn_cy = 14, 20
-            add_btn.create_oval(btn_cx-9, btn_cy-9, btn_cx+9, btn_cy+9,
-                               fill=color, outline="", tags=("btn_bg",))
-            add_btn.create_text(btn_cx, btn_cy, text="+",
-                               fill="#ffffff", font=("Consolas", 12, "bold"), tags=("btn_text",))
-            add_btn.bind("<Button-1>", lambda e, b=block: self._add_scratch_block(b))
+            add_btn.create_oval(10, 11, 22, 23, fill=color, outline="", tags=("btn_bg",))
+            add_btn.create_text(16, 17, text="+", fill="#fff", font=("Consolas", 12, "bold"), tags=("btn_text",))
+            add_btn.bind("<Button-1>", lambda e, b=block: self._add_block(b))
             add_btn.bind("<Enter>", lambda e, a=add_btn: a.itemconfig("btn_bg", fill=PIPE_COLORS["accent"]))
             add_btn.bind("<Leave>", lambda e, a=add_btn, c=color: a.itemconfig("btn_bg", fill=c))
-
             text_frame = tk.Frame(block_frame, bg=PIPE_COLORS["palette_bg"], cursor="hand2")
             text_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(4, 8), pady=6)
             name_lbl = tk.Label(text_frame, text=block["name"], font=FONT_SMALL,
@@ -540,50 +534,35 @@ class ScratchBuilder(tk.Frame):
             cat_lbl = tk.Label(text_frame, text=f"[{sec_name}]", font=("Microsoft YaHei UI", 7),
                     fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W, cursor="hand2")
             cat_lbl.pack()
-
-            # 所有子控件都绑定点击
-            add_block = lambda e, b=block: self._add_scratch_block(b)
-            hover_on = lambda e, f=block_frame, c=color: f.config(bg=PIPE_COLORS["node_header"])
+            add_block = lambda e, b=block: self._add_block(b)
+            hover_on = lambda e, f=block_frame: f.config(bg=PIPE_COLORS["node_header"])
             hover_off = lambda e, f=block_frame: f.config(bg=PIPE_COLORS["palette_bg"])
             for w in (block_frame, text_frame, name_lbl, cat_lbl):
                 w.bind("<Button-1>", add_block)
                 w.bind("<Enter>", hover_on)
                 w.bind("<Leave>", hover_off)
-
-        # 递归绑定：blocks_frame 内所有子控件都能滚轮滚动 palette_canvas
         self._bind_palette_scroll(blocks_frame, palette_canvas)
 
-        # 右侧：构建区域 + 代码生成
+        # 右侧：构建区域
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # 示意图 / 使用说明
-        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=72)
+        # 示意图操作栏
+        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=60)
         guide_frame.pack(fill=tk.X, padx=8, pady=(8, 0))
         guide_frame.pack_propagate(False)
-        guide_canvas = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=72, highlightthickness=0)
+        guide_canvas = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=60, highlightthickness=0)
         guide_canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
-
-        # 绘制流程示意: [函数模块] → (点击+) → [画布块] → [生成代码]
-        colors_flow = [PIPE_COLORS["block_data"], PIPE_COLORS["block_model"],
-                       PIPE_COLORS["block_loss"], PIPE_COLORS["block_optim"]]
+        cols = [PIPE_COLORS["block_data"], PIPE_COLORS["block_model"], PIPE_COLORS["block_loss"], PIPE_COLORS["block_optim"]]
         for i in range(4):
-            x = 40 + i * 65
-            guide_canvas.create_rectangle(x, 22, x + 46, 56, fill=colors_flow[i], outline="", tags="")
-            guide_canvas.create_text(x + 23, 35, text="+", fill="#fff", font=("Consolas", 10, "bold"))
-            guide_canvas.create_text(x + 23, 50, text="模块", fill="#94a3b8", font=("", 7))
-            if i < 3:
-                guide_canvas.create_line(x + 48, 39, x + 63, 39, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
+            x = 30 + i * 60
+            guide_canvas.create_rectangle(x, 22, x + 40, 48, fill=cols[i], outline="", tags="")
+            guide_canvas.create_text(x + 20, 35, text="+", fill="#fff", font=("Consolas", 9, "bold"))
+        guide_canvas.create_text(310, 18, text="Unity 风格可视化编程", fill=PIPE_COLORS["accent"], font=FONT_BOLD, anchor=tk.W)
+        guide_canvas.create_text(310, 36, text="点击左侧 + 添加模块 | 从右侧端口(O)拖线到左侧端口(I)建立连接 | 右键删块/连线", fill=PIPE_COLORS["muted"], font=FONT_SMALL, anchor=tk.W)
+        guide_canvas.create_text(310, 52, text="Shift+滚轮横向 | 生成的代码按连接顺序排列", fill="#5a6380", font=("Microsoft YaHei UI", 7), anchor=tk.W)
 
-        # 右侧文字
-        guide_canvas.create_text(340, 20, text="Scratch 构建模式", fill=PIPE_COLORS["accent"],
-                                 font=FONT_BOLD, anchor=tk.W)
-        guide_canvas.create_text(340, 42, text="点击左侧  +  添加模块 -> 拖拽排列 -> 生成代码",
-                                 fill=PIPE_COLORS["muted"], font=FONT_SMALL, anchor=tk.W)
-        guide_canvas.create_text(340, 60, text="右键删除模块  |  Shift+滚轮横向滚动  |  生成的代码可直接复制使用",
-                                 fill="#5a6380", font=("Microsoft YaHei UI", 7), anchor=tk.W)
-
-        # 构建画布（带滚动条）
+        # 构建画布（带滚动条 + 网格背景）
         build_frame = tk.Frame(right_panel, bg=PIPE_COLORS["bg"])
         build_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
         build_frame.grid_rowconfigure(0, weight=1)
@@ -596,42 +575,40 @@ class ScratchBuilder(tk.Frame):
         self.build_canvas.grid(row=0, column=0, sticky="nsew")
         v_scroll.grid(row=0, column=1, sticky="ns")
         h_scroll.grid(row=1, column=0, sticky="ew")
+
         self.build_canvas.bind("<Button-1>", self._on_canvas_click)
         self.build_canvas.bind("<B1-Motion>", self._on_canvas_drag)
         self.build_canvas.bind("<ButtonRelease-1>", self._on_canvas_release)
         self.build_canvas.bind("<Button-3>", self._on_canvas_right_click)
-        self.build_canvas.bind("<MouseWheel>", self._on_scroll_wheel)
-        self.build_canvas.bind("<Shift-MouseWheel>", self._on_shift_wheel)
+        self.build_canvas.bind("<MouseWheel>", lambda e: (self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"), "break")[1])
+        self.build_canvas.bind("<Shift-MouseWheel>", lambda e: (self.build_canvas.xview_scroll(int(-1*(e.delta/120)), "units"), "break")[1])
         self.build_canvas.bind("<Enter>", lambda e: self.build_canvas.focus_set())
+        self.build_canvas.bind("<Configure>", self._on_canvas_resize)
+
+        # 绘制网格背景
+        self._draw_grid()
 
         # 底部工具栏
         toolbar = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=52)
         toolbar.pack(fill=tk.X, side=tk.BOTTOM)
         toolbar.pack_propagate(False)
-
-        tk.Label(toolbar, text=f" 已添加 {len(self.scratch_blocks)} 个模块", font=FONT_SMALL,
+        tk.Label(toolbar, text=f" 模块:{len(self.scratch_blocks)} 连线:{len(self.connections)}", font=FONT_SMALL,
                 fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["panel_bg"]).pack(side=tk.LEFT, padx=12, pady=12)
-
         gen_btn = tk.Button(toolbar, text=" 生成代码 ", font=FONT_BOLD,
                            bg=PIPE_COLORS["accent"], fg="#ffffff", relief=tk.FLAT,
-                           cursor="hand2", padx=20, pady=8,
-                           activebackground="#2563eb",
+                           cursor="hand2", padx=20, pady=8, activebackground="#2563eb",
                            command=self._generate_code)
         gen_btn.pack(side=tk.RIGHT, padx=12, pady=8)
-
         clear_btn = tk.Button(toolbar, text=" 清空 ", font=FONT,
                              bg=PIPE_COLORS["port_bg"], fg=PIPE_COLORS["text"], relief=tk.FLAT,
-                             cursor="hand2", padx=20, pady=8,
-                             command=self._clear)
+                             cursor="hand2", padx=20, pady=8, command=self._clear)
         clear_btn.pack(side=tk.RIGHT, padx=4, pady=8)
 
         # 代码显示区
         code_panel = tk.Frame(right_panel, bg=PIPE_COLORS["canvas_bg"])
         code_panel.pack(fill=tk.BOTH, side=tk.BOTTOM, padx=8, pady=(0, 8))
-
         tk.Label(code_panel, text="  生成代码预览", font=FONT_BOLD,
                 fg=PIPE_COLORS["accent"], bg=PIPE_COLORS["canvas_bg"]).pack(anchor=tk.W, padx=8, pady=(8, 4))
-
         self.code_text = tk.Text(code_panel, font=("Consolas", 10), fg="#cbd5e1",
                                   bg=PIPE_COLORS["code_bg"], relief=tk.FLAT, bd=0,
                                   wrap=tk.NONE, padx=16, pady=12, height=9)
@@ -640,88 +617,117 @@ class ScratchBuilder(tk.Frame):
         self.code_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         code_h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
 
-    def _on_scroll_wheel(self, event):
-        self.build_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        return "break"
+    # ==================== Canvas 网格 ====================
+    def _on_canvas_resize(self, event):
+        self._draw_grid()
 
-    def _bind_palette_scroll(self, container, target_canvas):
-        """递归绑定滚轮：容器及其所有子控件滚轮都滚动 target_canvas"""
-        def scroll(e):
-            target_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
-            return "break"
-        container.bind("<MouseWheel>", scroll)
-        container.bind("<Enter>", lambda e: target_canvas.focus_set())
-        for child in container.winfo_children():
-            if isinstance(child, (tk.Canvas, tk.Frame, tk.Label)):
-                self._bind_palette_scroll(child, target_canvas)
+    def _draw_grid(self):
+        self.build_canvas.delete("grid")
+        w = int(self.build_canvas.winfo_width()) if self.build_canvas.winfo_width() > 1 else 2000
+        h = int(self.build_canvas.winfo_height()) if self.build_canvas.winfo_height() > 1 else 2000
+        for x in range(0, w, 40):
+            self.build_canvas.create_line(x, 0, x, h, fill="#1a2530", tags="grid")
+        for y in range(0, h, 40):
+            self.build_canvas.create_line(0, y, w, y, fill="#1a2530", tags="grid")
 
-    def _on_shift_wheel(self, event):
-        self.build_canvas.xview_scroll(int(-1 * (event.delta / 120)), "units")
-        return "break"
-
-    def _add_scratch_block(self, block_def):
+    # ==================== 添加/删除模块 ====================
+    def _add_block(self, block_def):
         self.block_id_counter += 1
-        bid = f"scratch_{self.block_id_counter}"
+        bid = f"blk_{self.block_id_counter}"
         color = PIPE_COLORS.get(block_def["color"], PIPE_COLORS["accent"])
-
         col = (self.block_id_counter - 1) % 3
         row = (self.block_id_counter - 1) // 3
-        x = 30 + col * 240
-        y = 30 + row * 80
-        w, h = 210, 58
+        x, y = 30 + col * 250, 30 + row * 85
+        w, h = 220, 60
 
         # 阴影
         self.build_canvas.create_rectangle(x + 2, y + 2, x + w + 2, y + h + 2,
-            fill="#0a0e17", outline="", tags=(bid, "scratch_block"), stipple="gray25")
+            fill="#0a0e17", outline="", tags=(bid, "block"), stipple="gray25")
         # 主体
         self.build_canvas.create_rectangle(x, y, x + w, y + h,
-            fill="#162032", outline=color, width=2, tags=(bid, "scratch_block"))
-        # 头部条
-        self.build_canvas.create_rectangle(x, y, x + w, y + 24,
-            fill=color, outline="", tags=(bid, "scratch_block"))
-        # 图标
-        icons = {"block_data": "D", "block_model": "M", "block_loss": "L",
-                 "block_optim": "O", "block_transform": "T", "block_metric": "E"}
-        self.build_canvas.create_text(x + 14, y + 12,
-            text=icons.get(block_def["color"], "?"),
-            fill="#ffffff", font=("Consolas", 10, "bold"), tags=(bid, "scratch_block"))
-        # 名称
-        self.build_canvas.create_text(x + w / 2 + 6, y + 12,
-            text=block_def["name"], fill="#ffffff", font=FONT_SMALL, tags=(bid, "scratch_block"))
-        # 模板
-        self.build_canvas.create_text(x + w / 2, y + 41,
-            text=block_def.get("template", "")[:30],
-            fill="#94a3b8", font=("Consolas", 7), tags=(bid, "scratch_block"))
-        # 端口
-        self.build_canvas.create_oval(x - 5, y + 28, x + 5, y + 38,
-            fill="#162032", outline=color, width=2, tags=(bid, "port_in"))
-        self.build_canvas.create_oval(x + w - 5, y + 28, x + w + 5, y + 38,
+            fill="#162032", outline=color, width=2, tags=(bid, "block"))
+        # 头部
+        self.build_canvas.create_rectangle(x, y, x + w, y + 26, fill=color, outline="", tags=(bid, "block"))
+        self.build_canvas.create_text(x + 14, y + 13, text=block_def["name"][:2],
+            fill="#fff", font=("Consolas", 9, "bold"), tags=(bid, "block"))
+        self.build_canvas.create_text(x + w / 2 + 6, y + 13, text=block_def["name"],
+            fill="#fff", font=FONT_SMALL, tags=(bid, "block"))
+        self.build_canvas.create_text(x + w / 2, y + 43, text=block_def.get("template", "")[:28],
+            fill="#94a3b8", font=("Consolas", 7), tags=(bid, "block"))
+
+        # 输入端口 (左侧圆) — 带标签 I
+        port_in = self.build_canvas.create_oval(x - 6, y + 22, x + 6, y + 34,
+            fill="#162032", outline="#64748b", width=2, tags=(bid, "port_in"))
+        self.build_canvas.create_text(x, y + 28, text="I", fill="#64748b",
+            font=("Consolas", 7, "bold"), tags=(bid, "port_in"))
+        # 输出端口 (右侧圆) — 带标签 O
+        port_out = self.build_canvas.create_oval(x + w - 6, y + 22, x + w + 6, y + 34,
             fill=color, outline=color, width=2, tags=(bid, "port_out"))
+        self.build_canvas.create_text(x + w, y + 28, text="O", fill="#fff",
+            font=("Consolas", 7, "bold"), tags=(bid, "port_out"))
 
         self.scratch_blocks.append({"id": bid, "def": block_def, "x": x, "y": y, "w": w, "h": h})
         self._ensure_scroll()
 
+    def _clear(self):
+        self.build_canvas.delete("all")
+        self.scratch_blocks.clear()
+        self.connections.clear()
+        self.block_id_counter = 0
+        self._drag_data["id"] = None
+        self._wire_drag["active"] = False
+        self.code_text.delete("1.0", tk.END)
+        self._draw_grid()
+
+    # ==================== 拖拽 + 连线 ====================
     def _on_canvas_click(self, event):
         cx = self.build_canvas.canvasx(event.x)
         cy = self.build_canvas.canvasy(event.y)
-        items = self.build_canvas.find_overlapping(cx - 2, cy - 2, cx + 2, cy + 2)
-        if not items:
-            items = self.build_canvas.find_closest(cx, cy)
+
+        # 检查是否点击了输出端口 (开始连线)
+        items = self.build_canvas.find_overlapping(cx - 4, cy - 4, cx + 4, cy + 4)
         for iid in items:
             tags = self.build_canvas.gettags(iid)
+            if "port_out" in tags:
+                for blk in self.scratch_blocks:
+                    if blk["id"] in tags:
+                        self._wire_drag["active"] = True
+                        self._wire_drag["from_bid"] = blk["id"]
+                        out_x = blk["x"] + blk["w"] + 6
+                        out_y = blk["y"] + 28
+                        self._wire_drag["temp_line"] = self.build_canvas.create_line(
+                            out_x, out_y, cx, cy, fill=PIPE_COLORS["accent"], width=2,
+                            dash=(4, 4), tags="temp_wire")
+                        return
+
+        # 检查是否点击了模块本身 (开始拖拽)
+        for blk in self.scratch_blocks:
+            if blk["id"] in (self.build_canvas.gettags(iid) for iid in items for t in self.build_canvas.gettags(iid)):
+                pass
+        for iid in items:
             for blk in self.scratch_blocks:
-                if blk["id"] in tags:
+                if blk["id"] in self.build_canvas.gettags(iid):
                     self._drag_data["id"] = blk["id"]
                     self._drag_data["ox"] = cx
                     self._drag_data["oy"] = cy
                     return
 
     def _on_canvas_drag(self, event):
+        cx = self.build_canvas.canvasx(event.x)
+        cy = self.build_canvas.canvasy(event.y)
+
+        # 连线拖拽
+        if self._wire_drag["active"] and self._wire_drag["temp_line"]:
+            from_blk = next((b for b in self.scratch_blocks if b["id"] == self._wire_drag["from_bid"]), None)
+            if from_blk:
+                self.build_canvas.coords(self._wire_drag["temp_line"],
+                    from_blk["x"] + from_blk["w"] + 6, from_blk["y"] + 28, cx, cy)
+            return
+
+        # 模块拖拽
         bid = self._drag_data.get("id")
         if not bid:
             return
-        cx = self.build_canvas.canvasx(event.x)
-        cy = self.build_canvas.canvasy(event.y)
         dx = cx - self._drag_data["ox"]
         dy = cy - self._drag_data["oy"]
         if abs(dx) < 1 and abs(dy) < 1:
@@ -735,34 +741,134 @@ class ScratchBuilder(tk.Frame):
                 break
         self._drag_data["ox"] = cx
         self._drag_data["oy"] = cy
+        self._redraw_connections()
         self._ensure_scroll()
 
     def _on_canvas_release(self, event):
+        # 连线释放: 检测落在哪个输入端口
+        if self._wire_drag["active"]:
+            cx = self.build_canvas.canvasx(event.x)
+            cy = self.build_canvas.canvasy(event.y)
+            items = self.build_canvas.find_overlapping(cx - 6, cy - 6, cx + 6, cy + 6)
+            target_bid = None
+            for iid in items:
+                tags = self.build_canvas.gettags(iid)
+                if "port_in" in tags:
+                    for blk in self.scratch_blocks:
+                        if blk["id"] in tags:
+                            target_bid = blk["id"]
+                            break
+                if target_bid:
+                    break
+            if target_bid and target_bid != self._wire_drag["from_bid"]:
+                self._add_connection(self._wire_drag["from_bid"], target_bid)
+            self.build_canvas.delete("temp_wire")
+            self._wire_drag = {"active": False, "from_bid": None, "ox": 0, "oy": 0, "temp_line": None}
+
         self._drag_data["id"] = None
         self._ensure_scroll()
 
+    def _add_connection(self, src_bid, dst_bid):
+        # 检查是否已存在同方向的连线
+        for conn in self.connections:
+            if conn[0] == src_bid and conn[1] == dst_bid:
+                return
+        src = next((b for b in self.scratch_blocks if b["id"] == src_bid), None)
+        dst = next((b for b in self.scratch_blocks if b["id"] == dst_bid), None)
+        if not src or not dst:
+            return
+        sx = src["x"] + src["w"] + 6
+        sy = src["y"] + 28
+        dx = dst["x"] - 6
+        dy = dst["y"] + 28
+        mid_x = (sx + dx) / 2
+        line_id = self.build_canvas.create_line(
+            sx, sy, mid_x, sy, mid_x, dy, dx, dy,
+            smooth=True, fill=PIPE_COLORS["accent"], width=2,
+            arrow=tk.LAST, arrowshape=(8, 10, 4), tags="connection")
+        self.connections.append((src_bid, dst_bid, line_id))
+
+    def _redraw_connections(self):
+        for conn in self.connections:
+            self.build_canvas.delete(conn[2])
+        old = self.connections
+        self.connections = []
+        for src_bid, dst_bid, _ in old:
+            self._add_connection(src_bid, dst_bid)
+
+    # ==================== 右键菜单 ====================
     def _on_canvas_right_click(self, event):
         cx = self.build_canvas.canvasx(event.x)
         cy = self.build_canvas.canvasy(event.y)
-        items = self.build_canvas.find_overlapping(cx - 2, cy - 2, cx + 2, cy + 2)
+        items = self.build_canvas.find_overlapping(cx - 4, cy - 4, cx + 4, cy + 4)
+
+        # 先检查连线
         for iid in items:
             tags = self.build_canvas.gettags(iid)
-            for blk in self.scratch_blocks:
+            if "connection" in tags or "temp_wire" in tags:
+                for conn in list(self.connections):
+                    if conn[2] == iid:
+                        self.build_canvas.delete(conn[2])
+                        self.connections.remove(conn)
+                        return
+
+        # 再检查模块
+        for iid in items:
+            tags = self.build_canvas.gettags(iid)
+            for blk in list(self.scratch_blocks):
                 if blk["id"] in tags:
-                    self.scratch_blocks.remove(blk)
+                    # 删除相关连线
+                    for conn in list(self.connections):
+                        if conn[0] == blk["id"] or conn[1] == blk["id"]:
+                            self.build_canvas.delete(conn[2])
+                            self.connections.remove(conn)
                     self.build_canvas.delete(blk["id"])
+                    self.scratch_blocks.remove(blk)
                     return
 
-    def _clear(self):
-        self.build_canvas.delete("all")
-        self.scratch_blocks.clear()
-        self.block_id_counter = 0
-        self._drag_data["id"] = None
-        self.code_text.delete("1.0", tk.END)
-
+    # ==================== 代码生成 (按连线拓扑排序) ====================
     def _generate_code(self):
-        libs_used = set(b["def"]["lib"] for b in self.scratch_blocks)
+        if not self.scratch_blocks:
+            self.code_text.delete("1.0", tk.END)
+            self.code_text.insert("1.0", "# 还没有添加模块")
+            return
+
+        # 拓扑排序
+        in_degree = {}
+        adj = {}
+        for blk in self.scratch_blocks:
+            in_degree[blk["id"]] = 0
+            adj[blk["id"]] = []
+        for src, dst, _ in self.connections:
+            if src in adj and dst in in_degree:
+                adj[src].append(dst)
+                in_degree[dst] = in_degree.get(dst, 0) + 1
+
+        queue = [bid for bid, deg in in_degree.items() if deg == 0]
+        ordered = []
+        while queue:
+            bid = queue.pop(0)
+            ordered.append(bid)
+            for nxt in adj.get(bid, []):
+                in_degree[nxt] -= 1
+                if in_degree[nxt] == 0:
+                    queue.append(nxt)
+
+        # 未连接的模块追加
+        for blk in self.scratch_blocks:
+            if blk["id"] not in ordered:
+                ordered.append(blk["id"])
+
+        # 生成代码
+        libs_used = set()
+        id_to_block = {b["id"]: b for b in self.scratch_blocks}
         lines = []
+        for bid in ordered:
+            blk = id_to_block.get(bid)
+            if not blk:
+                continue
+            libs_used.add(blk["def"]["lib"])
+
         if "PyTorch" in libs_used:
             lines += ["import torch", "import torch.nn as nn", "import torch.nn.functional as F",
                       "import torch.optim as optim", "from torch.utils.data import DataLoader, Dataset"]
@@ -775,17 +881,30 @@ class ScratchBuilder(tk.Frame):
         if "Scikit-learn" in libs_used:
             lines.append("from sklearn.metrics import accuracy_score, f1_score")
         lines.append("")
-        for blk in self.scratch_blocks:
-            template = blk["def"].get("template", blk["def"]["name"])
+
+        for bid in ordered:
+            blk = id_to_block.get(bid)
+            if not blk:
+                continue
             lines.append(f"# [{blk['def']['lib']}] {blk['def']['name']}")
-            lines.append(f"{template}")
+            lines.append(blk["def"].get("template", blk["def"]["name"]))
             lines.append("")
-        code = "\n".join(lines)
+
         self.code_text.delete("1.0", tk.END)
-        self.code_text.insert("1.0", code)
+        self.code_text.insert("1.0", "\n".join(lines))
 
     def _ensure_scroll(self):
         self.build_canvas.config(scrollregion=self.build_canvas.bbox("all"))
+
+    def _bind_palette_scroll(self, container, target_canvas):
+        def scroll(e):
+            target_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+            return "break"
+        container.bind("<MouseWheel>", scroll)
+        container.bind("<Enter>", lambda e: target_canvas.focus_set())
+        for child in container.winfo_children():
+            if isinstance(child, (tk.Canvas, tk.Frame, tk.Label)):
+                self._bind_palette_scroll(child, target_canvas)
 
 
 class PipelineView(tk.Frame):
