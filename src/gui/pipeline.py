@@ -3,7 +3,6 @@ Pipeline Flowchart Builder - 深度学习流程图构建器
 支持: 内置架构模板展示 + Scratch 风格拖拽编程
 """
 import tkinter as tk
-from tkinter import ttk
 import webbrowser
 
 
@@ -282,11 +281,16 @@ class PipelineCanvas(tk.Canvas):
         self.bind("<B1-Motion>", self._on_drag)
         self.bind("<ButtonRelease-1>", self._on_release)
         self.bind("<MouseWheel>", self._on_wheel)
+        self.bind("<Shift-MouseWheel>", self._on_shift_wheel)
         self.bind("<Enter>", lambda e: self.focus_set())
 
     def _on_wheel(self, event):
-        if self.yview() != (0.0, 1.0):
-            self.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        self.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
+
+    def _on_shift_wheel(self, event):
+        self.xview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
 
     def draw_architecture(self, arch):
         """绘制内置架构模板"""
@@ -527,18 +531,26 @@ class ScratchBuilder(tk.Frame):
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # 构建画布
-        self.build_canvas = tk.Canvas(right_panel, bg=PIPE_COLORS["canvas_bg"], highlightthickness=0)
-        self.build_canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+        # 构建画布（带滚动条）
+        build_frame = tk.Frame(right_panel, bg=PIPE_COLORS["bg"])
+        build_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+        build_frame.grid_rowconfigure(0, weight=1)
+        build_frame.grid_columnconfigure(0, weight=1)
+
+        self.build_canvas = tk.Canvas(build_frame, bg=PIPE_COLORS["canvas_bg"], highlightthickness=0)
+        h_scroll = tk.Scrollbar(build_frame, orient=tk.HORIZONTAL, command=self.build_canvas.xview)
+        v_scroll = tk.Scrollbar(build_frame, orient=tk.VERTICAL, command=self.build_canvas.yview)
+        self.build_canvas.configure(xscrollcommand=h_scroll.set, yscrollcommand=v_scroll.set)
+        self.build_canvas.grid(row=0, column=0, sticky="nsew")
+        v_scroll.grid(row=0, column=1, sticky="ns")
+        h_scroll.grid(row=1, column=0, sticky="ew")
         self.build_canvas.bind("<Button-1>", self._on_canvas_click)
         self.build_canvas.bind("<B1-Motion>", self._on_canvas_drag)
         self.build_canvas.bind("<ButtonRelease-1>", self._on_canvas_release)
         self.build_canvas.bind("<Button-3>", self._on_canvas_right_click)
-        self.build_canvas.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        self.build_canvas.bind("<MouseWheel>", self._on_scroll_wheel)
+        self.build_canvas.bind("<Shift-MouseWheel>", self._on_shift_wheel)
         self.build_canvas.bind("<Enter>", lambda e: self.build_canvas.focus_set())
-        # 父容器也绑定滚轮
-        right_panel.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
-        self.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
 
         # 底部工具栏
         toolbar = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=52)
@@ -575,6 +587,14 @@ class ScratchBuilder(tk.Frame):
         self.code_text.configure(xscrollcommand=code_h_scroll.set)
         self.code_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         code_h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+
+    def _on_scroll_wheel(self, event):
+        self.build_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
+
+    def _on_shift_wheel(self, event):
+        self.build_canvas.xview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
 
     def _add_scratch_block(self, block_def):
         self.block_id_counter += 1
@@ -678,11 +698,20 @@ class ScratchBuilder(tk.Frame):
         self.code_text.delete("1.0", tk.END)
 
     def _generate_code(self):
-        lines = ["import torch", "import torch.nn as nn", "import torch.nn.functional as F",
-                 "import torch.optim as optim", "import numpy as np",
-                 "from torch.utils.data import DataLoader, Dataset",
-                 "import cv2", "import pandas as pd",
-                 "from sklearn.metrics import accuracy_score, f1_score", ""]
+        libs_used = set(b["def"]["lib"] for b in self.scratch_blocks)
+        lines = []
+        if "PyTorch" in libs_used:
+            lines += ["import torch", "import torch.nn as nn", "import torch.nn.functional as F",
+                      "import torch.optim as optim", "from torch.utils.data import DataLoader, Dataset"]
+        if "NumPy" in libs_used:
+            lines.append("import numpy as np")
+        if "OpenCV" in libs_used:
+            lines.append("import cv2")
+        if "Pandas" in libs_used:
+            lines.append("import pandas as pd")
+        if "Scikit-learn" in libs_used:
+            lines.append("from sklearn.metrics import accuracy_score, f1_score")
+        lines.append("")
         for blk in self.scratch_blocks:
             template = blk["def"].get("template", blk["def"]["name"])
             lines.append(f"# [{blk['def']['lib']}] {blk['def']['name']}")
@@ -772,10 +801,6 @@ class PipelineView(tk.Frame):
         self.arch_canvas_frame.grid_rowconfigure(0, weight=1)
         self.arch_canvas_frame.grid_columnconfigure(0, weight=1)
 
-        # 父容器也绑定滚轮，保证在滚动条上方也能滚动
-        self.arch_canvas_frame.bind("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
-        self.arch_frame.bind("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
-
         # 相关函数按钮
         self.func_bar = tk.Frame(self.arch_frame, bg=PIPE_COLORS["panel_bg"])
         self.func_bar.pack(fill=tk.X, side=tk.BOTTOM, padx=8, pady=8)
@@ -831,12 +856,16 @@ class PipelineView(tk.Frame):
                 btn.pack(side=tk.LEFT, padx=4, pady=4)
 
     def _on_arch_node_click(self, node_id, node_data):
-        label = node_data.get("label", "")
+        label = node_data.get("label", "").lower()
         for fname in (self._current_arch or {}).get("functions", []):
             func = self.engine.func_dict.get(fname)
-            if func and func.get("name", "").lower() in label.lower():
-                self._show_func_detail(func)
-                break
+            if func:
+                name = func.get("name", "").lower()
+                mod = func.get("module", "").lower().replace("torch.", "").replace("nn.functional", "F")
+                # 精确 token 匹配
+                if name in label or mod in label:
+                    self._show_func_detail(func)
+                    break
 
     def _show_func_detail(self, func):
         if self.on_show_detail:

@@ -31,7 +31,6 @@ def get_project_root():
 PROJ_ROOT = get_project_root()
 sys.path.insert(0, PROJ_ROOT)
 
-import tkinter as tk
 from src.engine.search import SearchEngine
 from src.gui.main_window import MainWindow
 

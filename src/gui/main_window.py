@@ -8,7 +8,7 @@ import webbrowser
 
 from src.gui.components import (
     SearchBar, QuickAccessBar, FilterPanel,
-    ResultList, DetailPanel, SuggestionPanel,
+    ResultList, DetailPanel,
     COLORS, FONTS
 )
 from src.gui.pipeline import PipelineView, PIPE_COLORS
@@ -18,18 +18,6 @@ class MainWindow:
     def __init__(self, engine):
         self.engine = engine
         self.root = tk.Tk()
-
-        # 高 DPI 下字体清晰渲染
-        try:
-            import ctypes
-            hdc = ctypes.windll.user32.GetDC(0)
-            dpi = ctypes.windll.gdi32.GetDeviceCaps(hdc, 88)
-            ctypes.windll.user32.ReleaseDC(0, hdc)
-            if dpi > 96:
-                self.root.tk.call('tk', 'scaling', dpi / 72.0)
-        except Exception:
-            pass
-
         self.root.title("深度学习查询助手")
         self.root.geometry("1400x900")
         self.root.minsize(1100, 700)
@@ -60,7 +48,7 @@ class MainWindow:
         # 模式切换按钮
         self.mode_btn = tk.Button(
             header, text="  流程图 & Scratch  ",
-            font=("Microsoft YaHei UI", 10, "bold"),
+            font=FONTS["button"],
             bg=PIPE_COLORS["accent"], fg="#ffffff", relief=tk.FLAT, cursor="hand2",
             padx=16, pady=6, activebackground="#2563eb",
             command=self._toggle_pipeline_mode
@@ -178,10 +166,6 @@ class MainWindow:
 
     def _show_detail(self, func):
         self.detail_panel.show(func)
-        for related_id in func.get("related", []):
-            rel = self.engine.get_by_id(related_id)
-            if rel:
-                pass
 
     def _show_detail_by_id(self, func_id):
         func = self.engine.get_by_id(func_id)
@@ -193,11 +177,11 @@ class MainWindow:
         if self._pipeline_mode:
             self.search_view.pack_forget()
             self.pipeline_view.pack(fill=tk.BOTH, expand=True)
-            self.mode_btn.config(text="  返回搜索  ")
+            self.mode_btn.config(text="  返回搜索  ", bg=PIPE_COLORS["block_loss"])
         else:
             self.pipeline_view.pack_forget()
             self.search_view.pack(fill=tk.BOTH, expand=True)
-            self.mode_btn.config(text="  流程图 & Scratch  ")
+            self.mode_btn.config(text="  流程图 & Scratch  ", bg=PIPE_COLORS["accent"])
 
     def run(self):
         self.root.mainloop()

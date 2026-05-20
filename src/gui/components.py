@@ -421,26 +421,6 @@ class ResultList(tk.Frame):
     def _bind_root_scroll(self):
         root = self.winfo_toplevel()
         root.bind("<MouseWheel>", self._on_mousewheel, add="+")
-        self.bind("<Destroy>", lambda e: root.unbind("<MouseWheel>", self._wheel_id) if hasattr(self, "_wheel_id") else None)
-
-    def _on_mousewheel(self, event):
-        wx, wy = event.x_root, event.y_root
-        if self._inside_panel(wx, wy):
-            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    def _inside_panel(self, rx, ry):
-        x = self.winfo_rootx()
-        y = self.winfo_rooty()
-        w = self.winfo_width()
-        h = self.winfo_height()
-        return x <= rx <= x + w and y <= ry <= y + h
-
-    def _on_canvas_configure(self, event):
-        self.canvas.itemconfig(self.canvas_window, width=event.width)
-
-    def _bind_root_scroll(self):
-        root = self.winfo_toplevel()
-        root.bind("<MouseWheel>", self._on_mousewheel, add="+")
         self.bind("<Destroy>", lambda e: root.unbind("<MouseWheel>", self._on_mousewheel))
 
     def _on_mousewheel(self, event):
@@ -457,6 +437,9 @@ class ResultList(tk.Frame):
             return x <= rx <= x + w and y <= ry <= y + h
         except Exception:
             return False
+
+    def _on_canvas_configure(self, event):
+        self.canvas.itemconfig(self.canvas_window, width=event.width)
 
     def show_empty_with_links(self, query, doc_links, open_url_callback):
         for widget in self.scroll_frame.winfo_children():
@@ -828,38 +811,3 @@ class DetailPanel(tk.Frame):
     def _add_hover(self, btn, normal_bg, hover_bg):
         btn.bind("<Enter>", lambda e: btn.config(bg=hover_bg))
         btn.bind("<Leave>", lambda e: btn.config(bg=normal_bg))
-
-
-# ========== 编程建议面板 ==========
-class SuggestionPanel(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, bg=COLORS["panel_bg"])
-        self._build()
-
-    def _build(self):
-        tk.Label(
-            self, text="  下一步编程建议",
-            font=FONTS["subheading"], fg=COLORS["accent"], bg=COLORS["panel_bg"]
-        ).pack(anchor=tk.W, padx=16, pady=(12, 8))
-
-        self.text = tk.Label(
-            self, text="选择一个函数查看相关编程建议",
-            font=FONTS["normal"], fg=COLORS["muted"], bg=COLORS["panel_bg"],
-            justify=tk.LEFT, wraplength=900
-        )
-        self.text.pack(fill=tk.X, padx=16, pady=(0, 12))
-
-    def show_suggestions(self, func):
-        if not func:
-            self.text.config(text="选择一个函数查看相关编程建议")
-            return
-        lib = func.get("library", "")
-        module = func.get("module", "")
-        tips = func.get("tips", "")
-        related = func.get("related", [])
-        text = f"  当前函数: {func.get('full_name', '')}"
-        if tips:
-            text += f"\n  {tips}"
-        if related:
-            text += f"\n\n  你可能还需要了解: {', '.join(related[:5])}"
-        self.text.config(text=text)

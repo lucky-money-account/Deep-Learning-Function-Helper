@@ -17,13 +17,6 @@ try:
 except ImportError:
     JIEBA_AVAILABLE = False
 
-try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-
 def _get_data_dir():
     if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, "data")
