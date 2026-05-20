@@ -273,7 +273,8 @@ class PipelineCanvas(tk.Canvas):
         self.on_node_click = on_node_click
         self.nodes = {}
         self.edges = []
-        self._drag_data = {"node": None, "ox": 0, "oy": 0}
+        self._edge_items = {}  # (src_id, dst_id) -> line item
+        self._drag_data = {"id": None, "ox": 0, "oy": 0}
         self._setup_bindings()
 
     def _setup_bindings(self):
@@ -290,18 +291,14 @@ class PipelineCanvas(tk.Canvas):
         self.delete("all")
         self.nodes.clear()
         self.edges = arch.get("edges", [])
+        self._edge_items.clear()
 
-        # 画边
-        node_map = {n["id"]: n for n in arch["nodes"]}
-        for src_id, dst_id in self.edges:
-            src = node_map.get(src_id)
-            dst = node_map.get(dst_id)
-            if src and dst:
-                self._draw_edge(src, dst)
-
-        # 画节点
+        # 画节点（先画节点，再画边确保覆盖关系正确）
         for node in arch["nodes"]:
             self._draw_node(node)
+
+        # 画边
+        self._redraw_all_edges()
 
         self.config(scrollregion=self.bbox("all"))
 
@@ -340,22 +337,43 @@ class PipelineCanvas(tk.Canvas):
         y1 = src["y"] + src["h"] / 2
         x2 = dst["x"]
         y2 = dst["y"] + dst["h"] / 2
-        self.create_line(
+        line_id = self.create_line(
             x1, y1, x2, y2,
             fill=PIPE_COLORS["link_line"], width=2,
             arrow=tk.LAST, arrowshape=(10, 12, 5),
-            tags="edge"
+            tags=("edge", f"e_{src['id']}_{dst['id']}")
         )
+        self._edge_items[(src["id"], dst["id"])] = line_id
+
+    def _redraw_all_edges(self):
+        for src_id, dst_id in self.edges:
+            src = self.nodes.get(src_id, {}).get("data")
+            dst = self.nodes.get(dst_id, {}).get("data")
+            if src and dst:
+                if (src_id, dst_id) in self._edge_items:
+                    old = self._edge_items.pop((src_id, dst_id))
+                    self.delete(old)
+                self._draw_edge(src, dst)
+
+    def _redraw_edges_for(self, node_id):
+        for src_id, dst_id in list(self._edge_items.keys()):
+            if src_id == node_id or dst_id == node_id:
+                old = self._edge_items.pop((src_id, dst_id))
+                self.delete(old)
+                src = self.nodes.get(src_id, {}).get("data")
+                dst = self.nodes.get(dst_id, {}).get("data")
+                if src and dst:
+                    self._draw_edge(src, dst)
 
     def _on_click(self, event):
         item = self.find_closest(self.canvasx(event.x), self.canvasy(event.y))
         tags = self.gettags(item[0]) if item else ()
         if "node" in tags:
-            node_id = [t for t in tags if t != "node" and t != "current"][0]
-            self._drag_data["node"] = node_id
+            node_id = [t for t in tags if t != "node" and t != "current" and not t.startswith("e_")][0]
+            self._drag_data["id"] = node_id
             self._drag_data["ox"] = event.x
             self._drag_data["oy"] = event.y
-            # 高亮
+            # 高亮选中节点
             self.itemconfig("node", outline=PIPE_COLORS["port_bg"])
             for tid in self.find_withtag(node_id):
                 self.itemconfig(tid, outline=PIPE_COLORS["accent"])
@@ -364,19 +382,27 @@ class PipelineCanvas(tk.Canvas):
                 self.on_node_click(node_id, self.nodes.get(node_id, {}).get("data"))
 
     def _on_drag(self, event):
-        node_id = self._drag_data.get("node")
+        node_id = self._drag_data.get("id")
         if node_id and node_id in self.nodes:
             dx = event.x - self._drag_data["ox"]
             dy = event.y - self._drag_data["oy"]
+            # 移动节点所有子项
             for tid in self.find_withtag(node_id):
                 self.move(tid, dx, dy)
+            # 更新节点数据
+            self.nodes[node_id]["data"]["x"] += dx
+            self.nodes[node_id]["data"]["y"] += dy
+            # 重绘连接的边
+            self._redraw_edges_for(node_id)
             self._drag_data["ox"] = event.x
             self._drag_data["oy"] = event.y
 
     def _on_release(self, event):
-        self._drag_data["node"] = None
+        self._drag_data["id"] = None
         self.dtag("all", "current")
         self.itemconfig("node", outline=PIPE_COLORS["port_bg"])
+        self._redraw_all_edges()
+        self.config(scrollregion=self.bbox("all"))
 
     def clear(self):
         self.delete("all")
@@ -390,7 +416,7 @@ class ScratchBuilder(tk.Frame):
         super().__init__(parent, bg=PIPE_COLORS["bg"], **kw)
         self.scratch_blocks = []
         self.block_id_counter = 0
-        self._drag_block = None
+        self._drag_data = {"id": None, "ox": 0, "oy": 0}
         self._build()
 
     def _build(self):
@@ -399,7 +425,7 @@ class ScratchBuilder(tk.Frame):
         palette.pack(side=tk.LEFT, fill=tk.Y)
         palette.pack_propagate(False)
 
-        tk.Label(palette, text=" 函数块", font=FONT_BOLD,
+        tk.Label(palette, text="  函数模块", font=FONT_BOLD,
                 fg=PIPE_COLORS["accent"], bg=PIPE_COLORS["palette_bg"]).pack(pady=12, anchor=tk.W)
 
         palette_canvas = tk.Canvas(palette, bg=PIPE_COLORS["palette_bg"], highlightthickness=0)
@@ -411,20 +437,29 @@ class ScratchBuilder(tk.Frame):
         palette_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         blocks_frame.bind("<Configure>", lambda e: palette_canvas.configure(scrollregion=palette_canvas.bbox("all")))
 
-        sections = {"数据": "block_data", "模型层": "block_model", "损失": "block_loss", "优化器": "block_optim", "变换": "block_transform", "评估": "block_metric"}
+        sections = {"数据处理": "block_data", "模型层": "block_model", "损失函数": "block_loss", "优化器": "block_optim", "图像变换": "block_transform", "评估指标": "block_metric"}
         sec_colors = {v: k for k, v in sections.items()}
 
         for block in DRAGGABLE_BLOCKS:
             color = PIPE_COLORS.get(block["color"], PIPE_COLORS["accent"])
             sec_name = sec_colors.get(block["color"], block["color"])
-            lbl = tk.Label(blocks_frame, text=f" [{sec_name}] {block['name']}",
-                          font=FONT_SMALL, fg=PIPE_COLORS["text"],
-                          bg=PIPE_COLORS["palette_bg"], anchor=tk.W,
-                          padx=12, pady=6, cursor="hand2")
-            lbl.pack(fill=tk.X, pady=1)
-            lbl.bind("<Button-1>", lambda e, b=block: self._add_scratch_block(b))
-            lbl.bind("<Enter>", lambda e, l=lbl: l.config(bg=PIPE_COLORS["node_header"]))
-            lbl.bind("<Leave>", lambda e, l=lbl: l.config(bg=PIPE_COLORS["palette_bg"]))
+
+            block_frame = tk.Frame(blocks_frame, bg=PIPE_COLORS["palette_bg"])
+            block_frame.pack(fill=tk.X, pady=1, padx=4)
+
+            color_strip = tk.Frame(block_frame, bg=color, width=4, height=40)
+            color_strip.pack(side=tk.LEFT, fill=tk.Y)
+
+            text_frame = tk.Frame(block_frame, bg=PIPE_COLORS["palette_bg"], cursor="hand2")
+            text_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=8, pady=6)
+            tk.Label(text_frame, text=block["name"], font=FONT_SMALL,
+                    fg=PIPE_COLORS["text"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W).pack()
+            tk.Label(text_frame, text=f"[{sec_name}]", font=("Microsoft YaHei UI", 7),
+                    fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["palette_bg"], anchor=tk.W).pack()
+
+            text_frame.bind("<Button-1>", lambda e, b=block: self._add_scratch_block(b))
+            text_frame.bind("<Enter>", lambda e, f=text_frame, c=color: f.config(bg=PIPE_COLORS["node_header"]))
+            text_frame.bind("<Leave>", lambda e, f=text_frame: f.config(bg=PIPE_COLORS["palette_bg"]))
 
         # 右侧：构建区域 + 代码生成
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
@@ -434,64 +469,106 @@ class ScratchBuilder(tk.Frame):
         self.build_canvas = tk.Canvas(right_panel, bg=PIPE_COLORS["canvas_bg"], highlightthickness=0)
         self.build_canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
         self.build_canvas.bind("<Button-1>", self._on_canvas_click)
+        self.build_canvas.bind("<B1-Motion>", self._on_canvas_drag)
+        self.build_canvas.bind("<ButtonRelease-1>", self._on_canvas_release)
         self.build_canvas.bind("<Button-3>", self._on_canvas_right_click)
         self.build_canvas.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
 
         # 底部工具栏
-        toolbar = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=50)
+        toolbar = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=52)
         toolbar.pack(fill=tk.X, side=tk.BOTTOM)
         toolbar.pack_propagate(False)
 
-        gen_btn = tk.Button(toolbar, text="生成代码", font=FONT_BOLD,
+        tk.Label(toolbar, text=f" 已添加 {len(self.scratch_blocks)} 个模块", font=FONT_SMALL,
+                fg=PIPE_COLORS["muted"], bg=PIPE_COLORS["panel_bg"]).pack(side=tk.LEFT, padx=12, pady=12)
+
+        gen_btn = tk.Button(toolbar, text=" 生成代码 ", font=FONT_BOLD,
                            bg=PIPE_COLORS["accent"], fg="#ffffff", relief=tk.FLAT,
                            cursor="hand2", padx=20, pady=8,
                            activebackground="#2563eb",
                            command=self._generate_code)
-        gen_btn.pack(side=tk.LEFT, padx=12, pady=8)
+        gen_btn.pack(side=tk.RIGHT, padx=12, pady=8)
 
-        clear_btn = tk.Button(toolbar, text="清空", font=FONT,
+        clear_btn = tk.Button(toolbar, text=" 清空 ", font=FONT,
                              bg=PIPE_COLORS["port_bg"], fg=PIPE_COLORS["text"], relief=tk.FLAT,
                              cursor="hand2", padx=20, pady=8,
                              command=self._clear)
-        clear_btn.pack(side=tk.LEFT, padx=4, pady=8)
+        clear_btn.pack(side=tk.RIGHT, padx=4, pady=8)
 
         # 代码显示区
-        self.code_frame = tk.Frame(right_panel, bg=PIPE_COLORS["canvas_bg"])
-        self.code_text = tk.Text(self.code_frame, font=("Consolas", 10), fg="#cbd5e1",
+        code_panel = tk.Frame(right_panel, bg=PIPE_COLORS["canvas_bg"])
+        code_panel.pack(fill=tk.BOTH, side=tk.BOTTOM, padx=8, pady=(0, 8))
+
+        tk.Label(code_panel, text="  生成代码预览", font=FONT_BOLD,
+                fg=PIPE_COLORS["accent"], bg=PIPE_COLORS["canvas_bg"]).pack(anchor=tk.W, padx=8, pady=(8, 4))
+
+        self.code_text = tk.Text(code_panel, font=("Consolas", 10), fg="#cbd5e1",
                                   bg=PIPE_COLORS["code_bg"], relief=tk.FLAT, bd=0,
-                                  wrap=tk.NONE, padx=16, pady=12, height=8)
+                                  wrap=tk.NONE, padx=16, pady=12, height=9)
+        code_h_scroll = tk.Scrollbar(code_panel, orient=tk.HORIZONTAL, command=self.code_text.xview)
+        self.code_text.configure(xscrollcommand=code_h_scroll.set)
         self.code_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        code_h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
 
     def _add_scratch_block(self, block_def):
         self.block_id_counter += 1
         bid = f"scratch_{self.block_id_counter}"
         color = PIPE_COLORS.get(block_def["color"], PIPE_COLORS["accent"])
 
-        x = 40 + ((self.block_id_counter - 1) % 4) * 220
-        y = 30 + ((self.block_id_counter - 1) // 4) * 80
+        col = (self.block_id_counter - 1) % 3
+        row = (self.block_id_counter - 1) // 3
+        x = 30 + col * 240
+        y = 30 + row * 80
 
-        rect = self.build_canvas.create_rectangle(
-            x, y, x + 200, y + 54,
-            fill="#1e293b", outline=color, width=2, tags=(bid,)
-        )
-        self.build_canvas.create_rectangle(
-            x, y, x + 200, y + 22, fill=color, outline="", tags=(bid,)
-        )
-        self.build_canvas.create_text(
-            x + 100, y + 11, text=block_def["name"],
-            fill="#ffffff", font=FONT_SMALL, tags=(bid,)
-        )
-        self.build_canvas.create_text(
-            x + 100, y + 38,
-            text=block_def.get("template", "")[:35],
-            fill=PIPE_COLORS["muted"], font=("Consolas", 8), tags=(bid,)
-        )
+        # 主体
+        self.build_canvas.create_rectangle(x, y, x + 210, y + 56, fill="#1e293b", outline=color, width=2, tags=(bid, "scratch_block"))
+        # 颜色条
+        self.build_canvas.create_rectangle(x, y, x + 210, y + 22, fill=color, outline="", tags=(bid, "scratch_block"))
+        # 名称
+        self.build_canvas.create_text(x + 105, y + 11, text=block_def["name"], fill="#ffffff", font=FONT_SMALL, tags=(bid, "scratch_block"))
+        # 模板
+        self.build_canvas.create_text(x + 105, y + 39, text=block_def.get("template", "")[:32],
+                                       fill=PIPE_COLORS["muted"], font=("Consolas", 7), tags=(bid, "scratch_block"))
+        # 输入端口 (左)
+        self.build_canvas.create_oval(x - 5, y + 23, x + 5, y + 33, fill=PIPE_COLORS["port_active"], outline="", tags=(bid, "port_in"))
+        # 输出端口 (右)
+        self.build_canvas.create_oval(x + 205, y + 23, x + 215, y + 33, fill=PIPE_COLORS["port_active"], outline="", tags=(bid, "port_out"))
 
-        self.scratch_blocks.append({"id": bid, "def": block_def, "rect": rect, "x": x, "y": y})
+        self.scratch_blocks.append({"id": bid, "def": block_def, "x": x, "y": y, "w": 210, "h": 56})
         self._ensure_scroll()
 
     def _on_canvas_click(self, event):
-        pass
+        x = self.build_canvas.canvasx(event.x)
+        y = self.build_canvas.canvasy(event.y)
+        item = self.build_canvas.find_closest(x, y)
+        if item:
+            tags = self.build_canvas.gettags(item[0])
+            for blk in self.scratch_blocks:
+                if blk["id"] in tags:
+                    self._drag_data["id"] = blk["id"]
+                    self._drag_data["ox"] = event.x
+                    self._drag_data["oy"] = event.y
+                    return
+
+    def _on_canvas_drag(self, event):
+        bid = self._drag_data.get("id")
+        if not bid:
+            return
+        dx = event.x - self._drag_data["ox"]
+        dy = event.y - self._drag_data["oy"]
+        for tid in self.build_canvas.find_withtag(bid):
+            self.build_canvas.move(tid, dx, dy)
+        for blk in self.scratch_blocks:
+            if blk["id"] == bid:
+                blk["x"] += dx
+                blk["y"] += dy
+                break
+        self._drag_data["ox"] = event.x
+        self._drag_data["oy"] = event.y
+
+    def _on_canvas_release(self, event):
+        self._drag_data["id"] = None
+        self._ensure_scroll()
 
     def _on_canvas_right_click(self, event):
         item = self.build_canvas.find_closest(self.build_canvas.canvasx(event.x), self.build_canvas.canvasy(event.y))
@@ -507,6 +584,7 @@ class ScratchBuilder(tk.Frame):
         self.build_canvas.delete("all")
         self.scratch_blocks.clear()
         self.block_id_counter = 0
+        self._drag_data["id"] = None
         self.code_text.delete("1.0", tk.END)
 
     def _generate_code(self):
