@@ -15,6 +15,7 @@ PIPE_COLORS = {
     "text": "#e2e8f0",
     "muted": "#64748b",
     "accent": "#3b82f6",
+    "tag_text": "#93c5fd",
     "palette_bg": "#162032",
     "block_input": "#22c55e",
     "block_model": "#3b82f6",
