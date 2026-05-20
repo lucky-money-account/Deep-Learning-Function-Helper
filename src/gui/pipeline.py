@@ -535,6 +535,10 @@ class ScratchBuilder(tk.Frame):
         self.build_canvas.bind("<ButtonRelease-1>", self._on_canvas_release)
         self.build_canvas.bind("<Button-3>", self._on_canvas_right_click)
         self.build_canvas.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        self.build_canvas.bind("<Enter>", lambda e: self.build_canvas.focus_set())
+        # 父容器也绑定滚轮
+        right_panel.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        self.bind("<MouseWheel>", lambda e: self.build_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
 
         # 底部工具栏
         toolbar = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=52)
@@ -617,9 +621,11 @@ class ScratchBuilder(tk.Frame):
     def _on_canvas_click(self, event):
         cx = self.build_canvas.canvasx(event.x)
         cy = self.build_canvas.canvasy(event.y)
-        item = self.build_canvas.find_closest(cx, cy)
-        if item:
-            tags = self.build_canvas.gettags(item[0])
+        items = self.build_canvas.find_overlapping(cx - 2, cy - 2, cx + 2, cy + 2)
+        if not items:
+            items = self.build_canvas.find_closest(cx, cy)
+        for iid in items:
+            tags = self.build_canvas.gettags(iid)
             for blk in self.scratch_blocks:
                 if blk["id"] in tags:
                     self._drag_data["id"] = blk["id"]
@@ -653,14 +659,16 @@ class ScratchBuilder(tk.Frame):
         self._ensure_scroll()
 
     def _on_canvas_right_click(self, event):
-        item = self.build_canvas.find_closest(self.build_canvas.canvasx(event.x), self.build_canvas.canvasy(event.y))
-        if item:
-            tags = self.build_canvas.gettags(item[0])
+        cx = self.build_canvas.canvasx(event.x)
+        cy = self.build_canvas.canvasy(event.y)
+        items = self.build_canvas.find_overlapping(cx - 2, cy - 2, cx + 2, cy + 2)
+        for iid in items:
+            tags = self.build_canvas.gettags(iid)
             for blk in self.scratch_blocks:
                 if blk["id"] in tags:
                     self.scratch_blocks.remove(blk)
                     self.build_canvas.delete(blk["id"])
-                    break
+                    return
 
     def _clear(self):
         self.build_canvas.delete("all")
