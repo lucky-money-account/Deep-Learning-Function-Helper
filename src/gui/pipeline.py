@@ -550,6 +550,9 @@ class ScratchBuilder(tk.Frame):
                 w.bind("<Enter>", hover_on)
                 w.bind("<Leave>", hover_off)
 
+        # 递归绑定：blocks_frame 内所有子控件都能滚轮滚动 palette_canvas
+        self._bind_palette_scroll(blocks_frame, palette_canvas)
+
         # 右侧：构建区域 + 代码生成
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -623,10 +626,7 @@ class ScratchBuilder(tk.Frame):
         container.bind("<MouseWheel>", scroll)
         container.bind("<Enter>", lambda e: target_canvas.focus_set())
         for child in container.winfo_children():
-            if isinstance(child, tk.Canvas):
-                child.bind("<MouseWheel>", scroll)
-                child.bind("<Enter>", lambda e: target_canvas.focus_set())
-            elif isinstance(child, tk.Frame):
+            if isinstance(child, (tk.Canvas, tk.Frame, tk.Label)):
                 self._bind_palette_scroll(child, target_canvas)
 
     def _on_shift_wheel(self, event):
