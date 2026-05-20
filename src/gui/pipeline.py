@@ -557,6 +557,32 @@ class ScratchBuilder(tk.Frame):
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # 示意图 / 使用说明
+        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=72)
+        guide_frame.pack(fill=tk.X, padx=8, pady=(8, 0))
+        guide_frame.pack_propagate(False)
+        guide_canvas = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=72, highlightthickness=0)
+        guide_canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
+
+        # 绘制流程示意: [函数模块] → (点击+) → [画布块] → [生成代码]
+        colors_flow = [PIPE_COLORS["block_data"], PIPE_COLORS["block_model"],
+                       PIPE_COLORS["block_loss"], PIPE_COLORS["block_optim"]]
+        for i in range(4):
+            x = 40 + i * 65
+            guide_canvas.create_rectangle(x, 22, x + 46, 56, fill=colors_flow[i], outline="", tags="")
+            guide_canvas.create_text(x + 23, 35, text="+", fill="#fff", font=("Consolas", 10, "bold"))
+            guide_canvas.create_text(x + 23, 50, text="模块", fill="#94a3b8", font=("", 7))
+            if i < 3:
+                guide_canvas.create_line(x + 48, 39, x + 63, 39, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
+
+        # 右侧文字
+        guide_canvas.create_text(340, 20, text="Scratch 构建模式", fill=PIPE_COLORS["accent"],
+                                 font=FONT_BOLD, anchor=tk.W)
+        guide_canvas.create_text(340, 42, text="点击左侧  +  添加模块 -> 拖拽排列 -> 生成代码",
+                                 fill=PIPE_COLORS["muted"], font=FONT_SMALL, anchor=tk.W)
+        guide_canvas.create_text(340, 60, text="右键删除模块  |  Shift+滚轮横向滚动  |  生成的代码可直接复制使用",
+                                 fill="#5a6380", font=("Microsoft YaHei UI", 7), anchor=tk.W)
+
         # 构建画布（带滚动条）
         build_frame = tk.Frame(right_panel, bg=PIPE_COLORS["bg"])
         build_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
