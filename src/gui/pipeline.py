@@ -486,6 +486,65 @@ optimizer = optim.AdamW(model.parameters(), lr=1e-4)
     },
 ]
 
+# ========== 函数关系建议 ==========
+# 格式: 函数名 -> {"before": [前置建议], "after": [后置建议]}
+BLOCK_SUGGESTIONS = {
+    "DataLoader": {"before": ["Dataset", "TensorDataset", "train_test_split"], "after": ["nn.Conv2d", "nn.Linear", "model.train()"]},
+    "nn.Conv2d": {"before": ["DataLoader", "cv2.imread", "transforms.ToTensor"], "after": ["nn.BatchNorm2d", "F.relu", "nn.MaxPool2d", "nn.AvgPool2d"]},
+    "nn.BatchNorm2d": {"before": ["nn.Conv2d", "nn.Linear"], "after": ["F.relu", "F.leaky_relu", "F.gelu", "nn.MaxPool2d"]},
+    "F.relu": {"before": ["nn.Conv2d", "nn.Linear", "nn.BatchNorm2d"], "after": ["nn.MaxPool2d", "nn.AvgPool2d", "nn.Dropout", "nn.Conv2d"]},
+    "F.leaky_relu": {"before": ["nn.Conv2d", "nn.Linear", "nn.BatchNorm2d"], "after": ["nn.MaxPool2d", "nn.AvgPool2d", "nn.Dropout"]},
+    "F.gelu": {"before": ["nn.Linear", "nn.BatchNorm2d"], "after": ["nn.Dropout", "nn.MaxPool2d"]},
+    "F.sigmoid": {"before": ["nn.Linear"], "after": ["nn.BCEWithLogitsLoss"]},
+    "F.tanh": {"before": ["nn.Linear"], "after": ["nn.Linear"]},
+    "nn.MaxPool2d": {"before": ["F.relu", "nn.Conv2d", "nn.BatchNorm2d"], "after": ["nn.Conv2d", "nn.Flatten", "nn.AvgPool2d"]},
+    "nn.AvgPool2d": {"before": ["F.relu", "nn.Conv2d"], "after": ["nn.Conv2d", "nn.Flatten"]},
+    "nn.AdaptiveAvgPool2d": {"before": ["nn.Conv2d"], "after": ["nn.Flatten", "nn.Linear"]},
+    "nn.Dropout": {"before": ["F.relu", "nn.Linear"], "after": ["nn.Linear"]},
+    "nn.Linear": {"before": ["nn.Flatten", "nn.AdaptiveAvgPool2d", "nn.MaxPool2d", "nn.Dropout"], "after": ["F.relu", "F.softmax", "nn.Dropout", "nn.BCEWithLogitsLoss"]},
+    "F.flatten": {"before": ["nn.MaxPool2d", "nn.AdaptiveAvgPool2d", "nn.Conv2d"], "after": ["nn.Linear"]},
+    "F.softmax": {"before": ["nn.Linear"], "after": ["nn.CrossEntropyLoss", "nn.NLLLoss", "torch.argmax"]},
+    "F.log_softmax": {"before": ["nn.Linear"], "after": ["nn.NLLLoss"]},
+    "nn.CrossEntropyLoss": {"before": ["F.softmax", "nn.Linear", "model.forward"], "after": ["loss.backward", "optimizer.step"]},
+    "nn.MSELoss": {"before": ["nn.Linear", "F.sigmoid"], "after": ["loss.backward", "optimizer.step"]},
+    "nn.BCEWithLogitsLoss": {"before": ["nn.Linear"], "after": ["loss.backward", "optimizer.step"]},
+    "loss.backward": {"before": ["nn.CrossEntropyLoss", "nn.MSELoss"], "after": ["optimizer.step"]},
+    "optimizer.step": {"before": ["loss.backward", "optimizer.zero_grad"], "after": ["optimizer.zero_grad"]},
+    "optimizer.zero_grad": {"before": ["optimizer.step"], "after": ["model.forward", "loss.backward"]},
+    "optim.SGD": {"before": ["model"], "after": ["optimizer.zero_grad"]},
+    "optim.Adam": {"before": ["model"], "after": ["optimizer.zero_grad"]},
+    "optim.AdamW": {"before": ["model"], "after": ["optimizer.zero_grad"]},
+    "model.train()": {"before": [], "after": ["optimizer.zero_grad", "DataLoader"]},
+    "model.eval()": {"before": ["optimizer.step"], "after": ["torch.no_grad"]},
+    "torch.no_grad": {"before": ["model.eval()"], "after": ["accuracy_score", "f1_score"]},
+    "torch.save": {"before": ["optimizer.step", "model.train()"], "after": ["torch.load"]},
+    "torch.load": {"before": ["torch.save"], "after": ["model.eval()"]},
+    "accuracy_score": {"before": ["model.eval()", "torch.no_grad", "torch.argmax"], "after": ["f1_score", "confusion_matrix"]},
+    "f1_score": {"before": ["accuracy_score"], "after": ["classification_report"]},
+    "confusion_matrix": {"before": ["accuracy_score"], "after": ["classification_report"]},
+    "classification_report": {"before": ["accuracy_score", "f1_score"], "after": []},
+    "transforms.Resize": {"before": ["cv2.imread", "cv2.cvtColor"], "after": ["transforms.ToTensor", "transforms.RandomCrop"]},
+    "transforms.ToTensor": {"before": ["transforms.Resize"], "after": ["transforms.Normalize", "DataLoader"]},
+    "transforms.Normalize": {"before": ["transforms.ToTensor"], "after": ["DataLoader"]},
+    "transforms.Compose": {"before": [], "after": ["DataLoader"]},
+    "transforms.RandomHorizontalFlip": {"before": ["transforms.Resize"], "after": ["transforms.ToTensor"]},
+    "transforms.ColorJitter": {"before": ["transforms.Resize"], "after": ["transforms.ToTensor"]},
+    "cv2.imread": {"before": [], "after": ["cv2.cvtColor", "transforms.Resize"]},
+    "cv2.cvtColor": {"before": ["cv2.imread"], "after": ["transforms.Resize", "transforms.ToTensor"]},
+    "torch.argmax": {"before": ["F.softmax", "nn.Linear"], "after": ["accuracy_score"]},
+    "torch.cat": {"before": [], "after": ["nn.Conv2d", "nn.Linear"]},
+    "torch.flatten": {"before": ["nn.MaxPool2d", "nn.AdaptiveAvgPool2d"], "after": ["nn.Linear"]},
+    "nn.Embedding": {"before": [], "after": ["nn.LSTM", "nn.GRU"]},
+    "nn.LSTM": {"before": ["nn.Embedding"], "after": ["nn.Linear", "F.softmax"]},
+    "nn.GRU": {"before": ["nn.Embedding"], "after": ["nn.Linear", "F.softmax"]},
+    "resnet18()": {"before": [], "after": ["nn.Linear", "model.train()"]},
+    "resnet50()": {"before": [], "after": ["nn.Linear", "model.train()"]},
+    "vgg16()": {"before": [], "after": ["nn.Linear", "model.train()"]},
+    "np.array": {"before": [], "after": ["torch.from_numpy", "DataLoader"]},
+    "plt.plot": {"before": ["accuracy_score", "f1_score"], "after": ["plt.show"]},
+    "plt.imshow": {"before": ["cv2.imread", "cv2.cvtColor"], "after": ["plt.show"]},
+}
+
 
 class PipelineCanvas(tk.Canvas):
     """可缩放、支持节点拖拽的流程图画布"""
@@ -866,6 +925,15 @@ class ScratchBuilder(tk.Frame):
                              cursor="hand2", padx=20, pady=8, command=self._clear)
         clear_btn.pack(side=tk.RIGHT, padx=4, pady=8)
 
+        # 智能建议面板
+        self.suggest_panel = tk.Frame(right_panel, bg=PIPE_COLORS["canvas_bg"], height=36)
+        self.suggest_panel.pack(fill=tk.X, side=tk.BOTTOM, padx=8, pady=(4, 0))
+        self.suggest_panel.pack_propagate(False)
+        self.suggest_label = tk.Label(self.suggest_panel, text="",
+                                       bg=PIPE_COLORS["canvas_bg"], fg=PIPE_COLORS["muted"],
+                                       font=("Microsoft YaHei UI", 9), anchor=tk.W)
+        self.suggest_label.pack(fill=tk.X, padx=12, pady=6)
+
         # 代码显示区
         code_panel = tk.Frame(right_panel, bg=PIPE_COLORS["canvas_bg"])
         code_panel.pack(fill=tk.BOTH, side=tk.BOTTOM, padx=8, pady=(0, 8))
@@ -896,6 +964,41 @@ class ScratchBuilder(tk.Frame):
     # ==================== 添加/删除模块 ====================
     def _update_toolbar(self):
         self.toolbar_label.config(text=f"模块: {len(self.scratch_blocks)}  连线: {len(self.connections)}")
+
+    def _add_block(self, block_def):
+        """从面板添加一个模块到画布"""
+        self.block_id_counter += 1
+        bid = f"blk_{self.block_id_counter}"
+        color = PIPE_COLORS.get(block_def["color"], PIPE_COLORS["accent"])
+        col = (self.block_id_counter - 1) % 3
+        row = (self.block_id_counter - 1) // 3
+        x, y = 30 + col * 250, 30 + row * 85
+        w, h = 220, 60
+
+        self.build_canvas.create_rectangle(x + 2, y + 2, x + w + 2, y + h + 2,
+            fill="#0a0e17", outline="", tags=(bid, "block"), stipple="gray25")
+        self.build_canvas.create_rectangle(x, y, x + w, y + h,
+            fill="#162032", outline=color, width=2, tags=(bid, "block"))
+        self.build_canvas.create_rectangle(x, y, x + w, y + 26, fill=color, outline="", tags=(bid, "block"))
+        self.build_canvas.create_text(x + 14, y + 13, text=block_def["name"][:2],
+            fill="#fff", font=("Consolas", 9, "bold"), tags=(bid, "block"))
+        self.build_canvas.create_text(x + w / 2 + 6, y + 13, text=block_def["name"],
+            fill="#fff", font=FONT_SMALL, tags=(bid, "block"))
+        self.build_canvas.create_text(x + w / 2, y + 43, text=block_def.get("template", "")[:28],
+            fill="#94a3b8", font=("Consolas", 7), tags=(bid, "block"))
+        self.build_canvas.create_oval(x - 6, y + 22, x + 6, y + 34,
+            fill="#162032", outline="#64748b", width=2, tags=(bid, "port_in"))
+        self.build_canvas.create_text(x, y + 28, text="I", fill="#cbd5e1",
+            font=("Consolas", 7, "bold"), tags=(bid, "port_in"))
+        self.build_canvas.create_oval(x + w - 6, y + 22, x + w + 6, y + 34,
+            fill=color, outline=color, width=2, tags=(bid, "port_out"))
+        self.build_canvas.create_text(x + w, y + 28, text="O", fill="#fff",
+            font=("Consolas", 7, "bold"), tags=(bid, "port_out"))
+
+        self.scratch_blocks.append({"id": bid, "def": block_def, "x": x, "y": y, "w": w, "h": h})
+        self._ensure_scroll()
+        self._update_toolbar()
+        self._show_suggestion(block_def["name"])
 
     def _load_example(self, example):
         """加载示例项目：清空画布，添加预设模块和连线"""
@@ -940,6 +1043,8 @@ class ScratchBuilder(tk.Frame):
         self._update_toolbar()
         self.code_text.delete("1.0", tk.END)
         self.code_text.insert("1.0", example.get("code", ""))
+        if self.scratch_blocks:
+            self._show_suggestion(self.scratch_blocks[0]["def"]["name"])
         self.block_id_counter += 1
         bid = f"blk_{self.block_id_counter}"
         color = PIPE_COLORS.get(block_def["color"], PIPE_COLORS["accent"])
@@ -1017,6 +1122,7 @@ class ScratchBuilder(tk.Frame):
                     self._drag_data["id"] = blk["id"]
                     self._drag_data["ox"] = cx
                     self._drag_data["oy"] = cy
+                    self._show_suggestion(blk["def"]["name"])
                     return
 
     def _on_canvas_drag(self, event):
