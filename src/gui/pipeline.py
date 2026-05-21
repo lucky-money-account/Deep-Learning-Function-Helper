@@ -672,12 +672,24 @@ class ScratchBuilder(tk.Frame):
 
         sep_y = 44
         g.create_line(12, sep_y, 1100, sep_y, fill=PIPE_COLORS["port_bg"])
-        shortcuts = "左键拖动模块  |  O→I 拖线连接  |  右键删除模块/连线  |  Shift+滚轮横向移动  |  下部按钮加载示例项目  |  代码可直接复制使用"
+        shortcuts = [
+            "左键拖动模块", "O→I 拖线连接", "右键删除模块/连线",
+            "Shift+滚轮横向移动", "下部按钮加载示例", "代码可直接复制"
+        ]
         cx = 16
-        for part in shortcuts.split("  |  "):
-            clr = PIPE_COLORS["accent"] if "O→I" in part else (PIPE_COLORS["block_loss"] if "删除" in part else PIPE_COLORS["muted"])
-            g.create_text(cx, 58, text=part, fill=clr, font=("Microsoft YaHei UI", 8), anchor=tk.W)
-            cx += len(part) * 9 + 6
+        for part in shortcuts:
+            if "O→I" in part:
+                clr = PIPE_COLORS["accent"]
+            elif "删除" in part:
+                clr = PIPE_COLORS["block_loss"]
+            else:
+                clr = PIPE_COLORS["muted"]
+            tid = g.create_text(cx, 58, text=part, fill=clr, font=("Microsoft YaHei UI", 8), anchor=tk.W)
+            bbox = g.bbox(tid)
+            cx = (bbox[2] if bbox else cx + 80) + 12  # text right edge + gap
+            if part != shortcuts[-1]:
+                g.create_text(cx, 58, text="|", fill=PIPE_COLORS["port_bg"], font=("Microsoft YaHei UI", 8), anchor=tk.W)
+                cx += 16
 
         # 构建画布（带滚动条 + 网格背景）
         build_frame = tk.Frame(right_panel, bg=PIPE_COLORS["bg"])
