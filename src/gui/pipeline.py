@@ -548,20 +548,96 @@ class ScratchBuilder(tk.Frame):
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # 示意图操作栏
-        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=60)
+        # 示意图操作栏 - 详细步骤图解
+        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=110)
         guide_frame.pack(fill=tk.X, padx=8, pady=(8, 0))
         guide_frame.pack_propagate(False)
-        guide_canvas = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=60, highlightthickness=0)
-        guide_canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
-        cols = [PIPE_COLORS["block_data"], PIPE_COLORS["block_model"], PIPE_COLORS["block_loss"], PIPE_COLORS["block_optim"]]
-        for i in range(4):
-            x = 30 + i * 60
-            guide_canvas.create_rectangle(x, 22, x + 40, 48, fill=cols[i], outline="", tags="")
-            guide_canvas.create_text(x + 20, 35, text="+", fill="#fff", font=("Consolas", 9, "bold"))
-        guide_canvas.create_text(310, 18, text="Unity 风格可视化编程", fill=PIPE_COLORS["accent"], font=FONT_BOLD, anchor=tk.W)
-        guide_canvas.create_text(310, 36, text="点击左侧 + 添加模块 | 从右侧端口(O)拖线到左侧端口(I)建立连接 | 右键删块/连线", fill=PIPE_COLORS["muted"], font=FONT_SMALL, anchor=tk.W)
-        guide_canvas.create_text(310, 52, text="Shift+滚轮横向 | 生成的代码按连接顺序排列", fill="#5a6380", font=("Microsoft YaHei UI", 7), anchor=tk.W)
+        g = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=110, highlightthickness=0)
+        g.pack(fill=tk.BOTH, expand=True, padx=8, pady=6)
+
+        # 标题
+        g.create_text(12, 12, text="Unity 风格可视化编程 — 操作指引", fill=PIPE_COLORS["accent"],
+                      font=("Microsoft YaHei UI", 11, "bold"), anchor=tk.W)
+
+        y_top, y_mid, y_bot = 28, 54, 85
+        c1, c2, c3 = PIPE_COLORS["block_data"], PIPE_COLORS["block_model"], PIPE_COLORS["block_loss"]
+
+        # ==== 步骤 1: 添加模块 ====
+        g.create_text(12, y_top, text="1", fill="#fff", font=("Consolas", 10, "bold"))
+        g.create_text(28, y_top - 4, text="添加模块", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
+        g.create_text(28, y_top + 10, text="点击左侧面板的 + 按钮", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
+        # 迷你模块示意
+        x1 = 195
+        g.create_rectangle(x1, y_top - 6, x1 + 70, y_top + 22, fill="#162032", outline=c1, width=2)
+        g.create_rectangle(x1, y_top - 6, x1 + 70, y_top + 4, fill=c1, outline="")
+        g.create_text(x1 + 35, y_top - 1, text="Conv2d", fill="#fff", font=("Microsoft YaHei UI", 7, "bold"))
+        g.create_text(x1 + 12, y_top + 12, text="I", fill="#cbd5e1", font=("Consolas", 6, "bold"))
+        g.create_text(x1 + 58, y_top + 12, text="O", fill="#fff", font=("Consolas", 6, "bold"))
+        g.create_oval(x1 - 4, y_top + 8, x1 + 4, y_top + 16, fill="#162032", outline="#64748b", width=1)
+        g.create_oval(x1 + 66, y_top + 8, x1 + 74, y_top + 16, fill=c1, outline=c1, width=1)
+        # 箭头 1
+        g.create_line(275, y_top + 8, 325, y_top + 8, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
+
+        # ==== 步骤 2: 拖拽排列 ====
+        g.create_text(335, y_top, text="2", fill="#fff", font=("Consolas", 10, "bold"))
+        g.create_text(350, y_top - 4, text="拖拽排列", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
+        g.create_text(350, y_top + 10, text="左键拖动模块调整位置", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
+        # 两个错位模块
+        g.create_rectangle(525, y_top - 6, 595, y_top + 22, fill="#162032", outline=c2, width=2)
+        g.create_rectangle(525, y_top - 6, 595, y_top + 4, fill=c2, outline="")
+        g.create_text(560, y_top - 1, text="ReLU", fill="#fff", font=("Microsoft YaHei UI", 7, "bold"))
+        g.create_rectangle(608, y_top + 2, 678, y_top + 30, fill="#162032", outline=c3, width=2)
+        g.create_rectangle(608, y_top + 2, 678, y_top + 12, fill=c3, outline="")
+        g.create_text(643, y_top + 7, text="Loss", fill="#fff", font=("Microsoft YaHei UI", 7, "bold"))
+        g.create_oval(604, y_top + 12, 612, y_top + 20, fill="#162032", outline="#64748b", width=1)
+        g.create_oval(674, y_top + 12, 682, y_top + 20, fill=c3, outline=c3, width=1)
+        # 拖动指示箭头
+        g.create_line(460, y_top + 8, 510, y_top + 8, fill=PIPE_COLORS["link_line"], width=1, dash=(3, 3), arrow=tk.LAST)
+        g.create_text(485, y_top + 18, text="拖动", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 6))
+        # 箭头 2
+        g.create_line(695, y_top + 8, 745, y_top + 8, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
+
+        # ==== 步骤 3: 端口连线 ====
+        g.create_text(758, y_top, text="3", fill="#fff", font=("Consolas", 10, "bold"))
+        g.create_text(773, y_top - 4, text="端口连线", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
+        g.create_text(773, y_top + 10, text="从 O 拖到另一个模块的 I", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
+        # 连线示意
+        sx, sy = 943, y_top + 8
+        dx, dy = 980, y_top + 8
+        g.create_line(sx, sy, (sx+dx)//2, sy, (sx+dx)//2, dy, dx, dy,
+                      smooth=True, fill=PIPE_COLORS["accent"], width=2, arrow=tk.LAST)
+        # 标签
+        g.create_text(955, y_top - 10, text="O", fill=PIPE_COLORS["accent"], font=("Consolas", 6, "bold"))
+        g.create_text(975, y_top - 10, text="I", fill="#cbd5e1", font=("Consolas", 6, "bold"))
+        # 箭头 3
+        g.create_line(1000, y_top + 8, 1050, y_top + 8, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
+
+        # ==== 步骤 4: 生成代码 ====
+        g.create_text(1062, y_top, text="4", fill="#fff", font=("Consolas", 10, "bold"))
+        g.create_text(1078, y_top - 4, text="生成代码", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
+        g.create_text(1078, y_top + 10, text="按连接顺序自动排列", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
+        # 代码纸条
+        g.create_rectangle(1220, y_top - 4, 1370, y_top + 18, fill=PIPE_COLORS["code_bg"], outline=PIPE_COLORS["port_bg"])
+        g.create_text(1295, y_top + 8, text="x = conv(x)", fill="#4ade80", font=("Consolas", 8, "bold"))
+
+        # ====== 底部快捷键栏 ======
+        sep_y = y_bot - 6
+        g.create_line(12, sep_y, 1380, sep_y, fill=PIPE_COLORS["port_bg"])
+        shortcuts = [
+            (" 左键拖动模块", PIPE_COLORS["text"]),
+            (" | ", PIPE_COLORS["port_bg"]),
+            (" O→I 拖线连接", PIPE_COLORS["accent"]),
+            (" | ", PIPE_COLORS["port_bg"]),
+            (" 右键删块/连线", PIPE_COLORS["block_loss"]),
+            (" | ", PIPE_COLORS["port_bg"]),
+            (" Shift+滚轮横向", PIPE_COLORS["muted"]),
+            (" | ", PIPE_COLORS["port_bg"]),
+            (" 代码可直接复制", PIPE_COLORS["block_metric"]),
+        ]
+        cx = 16
+        for txt, clr in shortcuts:
+            g.create_text(cx, y_bot, text=txt, fill=clr, font=("Microsoft YaHei UI", 8), anchor=tk.W)
+            cx += len(txt) * 10 + 4
 
         # 构建画布（带滚动条 + 网格背景）
         build_frame = tk.Frame(right_panel, bg=PIPE_COLORS["bg"])
