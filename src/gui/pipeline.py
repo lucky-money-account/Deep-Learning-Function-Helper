@@ -264,6 +264,107 @@ DRAGGABLE_BLOCKS = [
      "template": "f1_score({y_true}, {y_pred}, average='{avg}')"},
 ]
 
+# ========== 示例项目数据 ==========
+EXAMPLE_PIPELINES = [
+    {
+        "name": "CNN 图像分类",
+        "desc": "卷积神经网络完整流水线: 数据加载→Conv→ReLU→Pool→FC→Loss→优化",
+        "blocks": [
+            # name, template, color, x, y
+            ("DataLoader", "DataLoader(dataset, batch_size=64, shuffle=True)", "block_data", 40, 100),
+            ("nn.Conv2d", "nn.Conv2d(3, 32, kernel_size=3, padding=1)", "block_model", 310, 100),
+            ("F.relu", "F.relu(x)", "block_model", 310, 200),
+            ("nn.MaxPool2d", "nn.MaxPool2d(2, stride=2)", "block_model", 310, 300),
+            ("nn.Conv2d", "nn.Conv2d(32, 64, kernel_size=3, padding=1)", "block_model", 580, 300),
+            ("F.relu", "F.relu(x)", "block_model", 580, 400),
+            ("nn.MaxPool2d", "nn.MaxPool2d(2, stride=2)", "block_model", 580, 500),
+            ("torch.flatten", "x = torch.flatten(x, start_dim=1)", "block_transform", 850, 400),
+            ("nn.Linear", "nn.Linear(64*8*8, 128)", "block_model", 1120, 400),
+            ("F.relu", "F.relu(x)", "block_model", 1120, 300),
+            ("nn.Linear", "nn.Linear(128, 10)", "block_model", 1120, 200),
+            ("F.softmax", "F.softmax(x, dim=1)", "block_model", 1120, 100),
+            ("nn.CrossEntropyLoss", "nn.CrossEntropyLoss()", "block_loss", 1390, 200),
+            ("optim.Adam", "optim.Adam(model.parameters(), lr=0.001)", "block_optim", 1390, 350),
+        ],
+        "connections": [
+            # sequential connections through the pipeline
+            (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8),
+            (8, 9), (9, 10), (10, 11), (11, 12),
+        ],
+        "code": '''import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import DataLoader
+
+# 1. 数据加载
+train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+
+# 2. 模型定义
+class CNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(2, stride=2)
+        self.fc1 = nn.Linear(64 * 8 * 8, 128)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = torch.flatten(x, start_dim=1)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return F.log_softmax(x, dim=1)
+
+# 3. 训练
+model = CNN()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+criterion = nn.CrossEntropyLoss()
+for epoch in range(10):
+    for x, y in train_loader:
+        optimizer.zero_grad()
+        output = model(x)
+        loss = criterion(output, y)
+        loss.backward()
+        optimizer.step()''',
+    },
+    {
+        "name": "迁移学习 (ResNet)",
+        "desc": "ResNet18 预训练→冻结特征→替换分类头→微调",
+        "blocks": [
+            ("models.resnet18", "resnet18(weights='IMAGENET1K_V1')", "block_model", 40, 100),
+            ("nn.Linear", "nn.Linear(512, {num_classes})", "block_model", 310, 100),
+            ("optim.AdamW", "optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.01)", "block_optim", 310, 250),
+            ("nn.CrossEntropyLoss", "nn.CrossEntropyLoss()", "block_loss", 580, 100),
+            ("torch.no_grad", "with torch.no_grad():\n    ...", "block_metric", 580, 250),
+        ],
+        "connections": [(0, 1), (1, 3), (2, 1), (4, 3)],
+        "code": '''from torchvision.models import resnet18
+import torch.nn as nn, torch.optim as optim
+
+# 加载预训练模型
+model = resnet18(weights='IMAGENET1K_V1')
+for param in model.parameters():
+    param.requires_grad = False  # 冻结特征层
+
+# 替换分类头
+model.fc = nn.Linear(512, 10)
+
+# 训练 (仅 fc 层)
+optimizer = optim.AdamW(model.fc.parameters(), lr=1e-3)
+criterion = nn.CrossEntropyLoss()
+# ... train for N epochs ...
+
+# 微调 (全模型)
+for param in model.parameters():
+    param.requires_grad = True
+optimizer = optim.AdamW(model.parameters(), lr=1e-4)
+# ... fine-tune ...''',
+    },
+]
+
 
 class PipelineCanvas(tk.Canvas):
     """可缩放、支持节点拖拽的流程图画布"""
@@ -548,96 +649,35 @@ class ScratchBuilder(tk.Frame):
         right_panel = tk.Frame(self, bg=PIPE_COLORS["bg"])
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # 示意图操作栏 - 详细步骤图解
-        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=110)
+        # 示意图操作栏 - 简版快速参考
+        guide_frame = tk.Frame(right_panel, bg=PIPE_COLORS["panel_bg"], height=80)
         guide_frame.pack(fill=tk.X, padx=8, pady=(8, 0))
         guide_frame.pack_propagate(False)
-        g = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=110, highlightthickness=0)
-        g.pack(fill=tk.BOTH, expand=True, padx=8, pady=6)
+        g = tk.Canvas(guide_frame, bg=PIPE_COLORS["panel_bg"], height=80, highlightthickness=0)
+        g.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
 
-        # 标题
-        g.create_text(12, 12, text="Unity 风格可视化编程 — 操作指引", fill=PIPE_COLORS["accent"],
-                      font=("Microsoft YaHei UI", 11, "bold"), anchor=tk.W)
-
-        y_top, y_mid, y_bot = 28, 54, 85
-        c1, c2, c3 = PIPE_COLORS["block_data"], PIPE_COLORS["block_model"], PIPE_COLORS["block_loss"]
-
-        # ==== 步骤 1: 添加模块 ====
-        g.create_text(12, y_top, text="1", fill="#fff", font=("Consolas", 10, "bold"))
-        g.create_text(28, y_top - 4, text="添加模块", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
-        g.create_text(28, y_top + 10, text="点击左侧面板的 + 按钮", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
-        # 迷你模块示意
-        x1 = 195
-        g.create_rectangle(x1, y_top - 6, x1 + 70, y_top + 22, fill="#162032", outline=c1, width=2)
-        g.create_rectangle(x1, y_top - 6, x1 + 70, y_top + 4, fill=c1, outline="")
-        g.create_text(x1 + 35, y_top - 1, text="Conv2d", fill="#fff", font=("Microsoft YaHei UI", 7, "bold"))
-        g.create_text(x1 + 12, y_top + 12, text="I", fill="#cbd5e1", font=("Consolas", 6, "bold"))
-        g.create_text(x1 + 58, y_top + 12, text="O", fill="#fff", font=("Consolas", 6, "bold"))
-        g.create_oval(x1 - 4, y_top + 8, x1 + 4, y_top + 16, fill="#162032", outline="#64748b", width=1)
-        g.create_oval(x1 + 66, y_top + 8, x1 + 74, y_top + 16, fill=c1, outline=c1, width=1)
-        # 箭头 1
-        g.create_line(275, y_top + 8, 325, y_top + 8, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
-
-        # ==== 步骤 2: 拖拽排列 ====
-        g.create_text(335, y_top, text="2", fill="#fff", font=("Consolas", 10, "bold"))
-        g.create_text(350, y_top - 4, text="拖拽排列", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
-        g.create_text(350, y_top + 10, text="左键拖动模块调整位置", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
-        # 两个错位模块
-        g.create_rectangle(525, y_top - 6, 595, y_top + 22, fill="#162032", outline=c2, width=2)
-        g.create_rectangle(525, y_top - 6, 595, y_top + 4, fill=c2, outline="")
-        g.create_text(560, y_top - 1, text="ReLU", fill="#fff", font=("Microsoft YaHei UI", 7, "bold"))
-        g.create_rectangle(608, y_top + 2, 678, y_top + 30, fill="#162032", outline=c3, width=2)
-        g.create_rectangle(608, y_top + 2, 678, y_top + 12, fill=c3, outline="")
-        g.create_text(643, y_top + 7, text="Loss", fill="#fff", font=("Microsoft YaHei UI", 7, "bold"))
-        g.create_oval(604, y_top + 12, 612, y_top + 20, fill="#162032", outline="#64748b", width=1)
-        g.create_oval(674, y_top + 12, 682, y_top + 20, fill=c3, outline=c3, width=1)
-        # 拖动指示箭头
-        g.create_line(460, y_top + 8, 510, y_top + 8, fill=PIPE_COLORS["link_line"], width=1, dash=(3, 3), arrow=tk.LAST)
-        g.create_text(485, y_top + 18, text="拖动", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 6))
-        # 箭头 2
-        g.create_line(695, y_top + 8, 745, y_top + 8, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
-
-        # ==== 步骤 3: 端口连线 ====
-        g.create_text(758, y_top, text="3", fill="#fff", font=("Consolas", 10, "bold"))
-        g.create_text(773, y_top - 4, text="端口连线", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
-        g.create_text(773, y_top + 10, text="从 O 拖到另一个模块的 I", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
-        # 连线示意
-        sx, sy = 943, y_top + 8
-        dx, dy = 980, y_top + 8
-        g.create_line(sx, sy, (sx+dx)//2, sy, (sx+dx)//2, dy, dx, dy,
-                      smooth=True, fill=PIPE_COLORS["accent"], width=2, arrow=tk.LAST)
-        # 标签
-        g.create_text(955, y_top - 10, text="O", fill=PIPE_COLORS["accent"], font=("Consolas", 6, "bold"))
-        g.create_text(975, y_top - 10, text="I", fill="#cbd5e1", font=("Consolas", 6, "bold"))
-        # 箭头 3
-        g.create_line(1000, y_top + 8, 1050, y_top + 8, fill=PIPE_COLORS["link_line"], width=2, arrow=tk.LAST)
-
-        # ==== 步骤 4: 生成代码 ====
-        g.create_text(1062, y_top, text="4", fill="#fff", font=("Consolas", 10, "bold"))
-        g.create_text(1078, y_top - 4, text="生成代码", fill=PIPE_COLORS["text"], font=FONT_SMALL, anchor=tk.W)
-        g.create_text(1078, y_top + 10, text="按连接顺序自动排列", fill=PIPE_COLORS["muted"], font=("Microsoft YaHei UI", 7), anchor=tk.W)
-        # 代码纸条
-        g.create_rectangle(1220, y_top - 4, 1370, y_top + 18, fill=PIPE_COLORS["code_bg"], outline=PIPE_COLORS["port_bg"])
-        g.create_text(1295, y_top + 8, text="x = conv(x)", fill="#4ade80", font=("Consolas", 8, "bold"))
-
-        # ====== 底部快捷键栏 ======
-        sep_y = y_bot - 6
-        g.create_line(12, sep_y, 1380, sep_y, fill=PIPE_COLORS["port_bg"])
-        shortcuts = [
-            (" 左键拖动模块", PIPE_COLORS["text"]),
-            (" | ", PIPE_COLORS["port_bg"]),
-            (" O→I 拖线连接", PIPE_COLORS["accent"]),
-            (" | ", PIPE_COLORS["port_bg"]),
-            (" 右键删块/连线", PIPE_COLORS["block_loss"]),
-            (" | ", PIPE_COLORS["port_bg"]),
-            (" Shift+滚轮横向", PIPE_COLORS["muted"]),
-            (" | ", PIPE_COLORS["port_bg"]),
-            (" 代码可直接复制", PIPE_COLORS["block_metric"]),
+        g.create_text(12, 14, text="可视化编程画布", fill=PIPE_COLORS["accent"], font=("Microsoft YaHei UI", 11, "bold"), anchor=tk.W)
+        # 四个步骤
+        c1, c2, c3 = PIPE_COLORS["block_data"], PIPE_COLORS["block_model"], PIPE_COLORS["accent"]
+        steps = [
+            (200, "1. 点 + 添加模块", c1),
+            (400, "2. 左键拖动排列", c2),
+            (600, "3. O 端口拖到 I 建立连线", c3),
+            (850, "4. 生成代码 (按连线顺序)", PIPE_COLORS["block_metric"]),
         ]
+        for x, txt, clr in steps:
+            g.create_oval(x - 7, 10, x + 7, 24, fill=clr, outline="")
+            g.create_text(x, 17, text=str(steps.index((x, txt, clr)) + 1), fill="#fff", font=("Consolas", 8, "bold"))
+            g.create_text(x + 14, 17, text=txt, fill=PIPE_COLORS["text"], font=("Microsoft YaHei UI", 9), anchor=tk.W)
+
+        sep_y = 44
+        g.create_line(12, sep_y, 1100, sep_y, fill=PIPE_COLORS["port_bg"])
+        shortcuts = "左键拖动模块  |  O→I 拖线连接  |  右键删除模块/连线  |  Shift+滚轮横向移动  |  下部按钮加载示例项目  |  代码可直接复制使用"
         cx = 16
-        for txt, clr in shortcuts:
-            g.create_text(cx, y_bot, text=txt, fill=clr, font=("Microsoft YaHei UI", 8), anchor=tk.W)
-            cx += len(txt) * 10 + 4
+        for part in shortcuts.split("  |  "):
+            clr = PIPE_COLORS["accent"] if "O→I" in part else (PIPE_COLORS["block_loss"] if "删除" in part else PIPE_COLORS["muted"])
+            g.create_text(cx, 58, text=part, fill=clr, font=("Microsoft YaHei UI", 8), anchor=tk.W)
+            cx += len(part) * 9 + 6
 
         # 构建画布（带滚动条 + 网格背景）
         build_frame = tk.Frame(right_panel, bg=PIPE_COLORS["bg"])
@@ -675,6 +715,14 @@ class ScratchBuilder(tk.Frame):
                 fg=PIPE_COLORS["accent"], bg=PIPE_COLORS["panel_bg"])
         self.toolbar_label.pack(side=tk.LEFT, pady=12)
         self._update_toolbar()
+        # 示例项目按钮
+        for i, ex in enumerate(EXAMPLE_PIPELINES):
+            ex_btn = tk.Button(toolbar, text=f" 示例: {ex['name']} ", font=FONT,
+                              bg=PIPE_COLORS["block_data"] if i == 0 else PIPE_COLORS["block_metric"],
+                              fg="#ffffff", relief=tk.FLAT, cursor="hand2", padx=12, pady=8,
+                              activebackground=PIPE_COLORS["accent"],
+                              command=lambda e=ex: self._load_example(e))
+            ex_btn.pack(side=tk.RIGHT, padx=4, pady=8)
         gen_btn = tk.Button(toolbar, text=" 生成代码 ", font=FONT_BOLD,
                            bg=PIPE_COLORS["accent"], fg="#ffffff", relief=tk.FLAT,
                            cursor="hand2", padx=20, pady=8, activebackground="#2563eb",
@@ -716,7 +764,49 @@ class ScratchBuilder(tk.Frame):
     def _update_toolbar(self):
         self.toolbar_label.config(text=f"模块: {len(self.scratch_blocks)}  连线: {len(self.connections)}")
 
-    def _add_block(self, block_def):
+    def _load_example(self, example):
+        """加载示例项目：清空画布，添加预设模块和连线"""
+        self._clear()
+        for name, template, color, x, y in example["blocks"]:
+            # 查找匹配的块定义
+            match = next((b for b in DRAGGABLE_BLOCKS if b["name"] == name), None)
+            if not match:
+                match = {"name": name, "lib": "PyTorch", "color": color}
+            # 直接添加到 scratch_blocks 并在画布上绘制
+            self.block_id_counter += 1
+            bid = f"blk_{self.block_id_counter}"
+            clr = PIPE_COLORS.get(color, PIPE_COLORS["accent"])
+            w, h = 220, 60
+            self.build_canvas.create_rectangle(x + 2, y + 2, x + w + 2, y + h + 2,
+                fill="#0a0e17", outline="", tags=(bid, "block"), stipple="gray25")
+            self.build_canvas.create_rectangle(x, y, x + w, y + h,
+                fill="#162032", outline=clr, width=2, tags=(bid, "block"))
+            self.build_canvas.create_rectangle(x, y, x + w, y + 26, fill=clr, outline="", tags=(bid, "block"))
+            self.build_canvas.create_text(x + 14, y + 13, text=name[:2],
+                fill="#fff", font=("Consolas", 9, "bold"), tags=(bid, "block"))
+            self.build_canvas.create_text(x + w / 2 + 6, y + 13, text=name,
+                fill="#fff", font=FONT_SMALL, tags=(bid, "block"))
+            self.build_canvas.create_text(x + w / 2, y + 43, text=template[:28],
+                fill="#94a3b8", font=("Consolas", 7), tags=(bid, "block"))
+            self.build_canvas.create_oval(x - 6, y + 22, x + 6, y + 34,
+                fill="#162032", outline="#64748b", width=2, tags=(bid, "port_in"))
+            self.build_canvas.create_text(x, y + 28, text="I", fill="#cbd5e1",
+                font=("Consolas", 7, "bold"), tags=(bid, "port_in"))
+            self.build_canvas.create_oval(x + w - 6, y + 22, x + w + 6, y + 34,
+                fill=clr, outline=clr, width=2, tags=(bid, "port_out"))
+            self.build_canvas.create_text(x + w, y + 28, text="O", fill="#fff",
+                font=("Consolas", 7, "bold"), tags=(bid, "port_out"))
+            self.scratch_blocks.append({"id": bid, "def": match, "x": x, "y": y, "w": w, "h": h})
+
+        # 建立连线
+        for src_idx, dst_idx in example["connections"]:
+            if src_idx < len(self.scratch_blocks) and dst_idx < len(self.scratch_blocks):
+                self._add_connection(self.scratch_blocks[src_idx]["id"], self.scratch_blocks[dst_idx]["id"])
+
+        self._ensure_scroll()
+        self._update_toolbar()
+        self.code_text.delete("1.0", tk.END)
+        self.code_text.insert("1.0", example.get("code", ""))
         self.block_id_counter += 1
         bid = f"blk_{self.block_id_counter}"
         color = PIPE_COLORS.get(block_def["color"], PIPE_COLORS["accent"])
